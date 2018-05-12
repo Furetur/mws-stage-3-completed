@@ -1,0 +1,122 @@
+@media screen and (min-width:480px) {
+  nav h1 {
+    display: block;
+    line-height: 80px;
+  }
+}
+
+@media screen and (min-width: 430px) and (max-width: 839px) {
+  #restaurant-hours .right > span {
+    width: 100%;
+  }
+}
+
+@media screen and (min-width: 534px){
+  #restaurants-list li {
+    width: calc(50% - 30px);
+  }
+
+}
+
+@media screen and (min-width: 528px) and (max-width: 839px) {
+  #main-restaurant-info, #restaurant-hours {
+    width: 459.625px;
+    margin-right: auto;
+    margin-left: auto;
+  }
+  #main-restaurant-info {
+    display: block;
+  }
+}
+
+@media screen and (min-width: 561px) and (max-width: 1351px){
+  .filter-options select {
+    width: 49%;
+  }
+
+}
+
+@media screen and (min-width: 701px) and (max-width: 1350px){
+  #reviews-list li {
+    width: calc(50% - 30px);
+  }
+  #restaurant-container {
+
+  }
+  .inside #map-container {
+
+  }
+}
+
+@media screen and (min-width: 800px) {
+  #restaurants-list li {
+    width: calc(33% - 30px);
+  }
+}
+
+
+@media screen and (min-width: 840px) and (max-width: 1350px){
+  #restaurant-and-reviews {
+    width: 790px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+  #main-restaurant-info, #restaurant-hours {
+    width: calc(50% - 30px);
+    margin: 15px;
+  }
+}
+
+@media screen and (min-width: 1050px) {
+  #restaurants-list li {
+    width: calc(25% - 30px);
+  }
+}
+
+@media screen and (min-width: 1251px) {
+
+}
+
+@media screen and (min-width: 1351px) {
+  #breadcrumb {
+    display: none;
+  }
+  #header-spacer {
+    height: 80px;
+  }
+  #map-container {
+    order: 0;
+    width: 75%;
+    height: calc(100vh - 80px);
+    z-index: 1;
+  }
+  #map {
+    height: calc(100vh - 80px);
+  }
+  #main-section, #restaurant-and-reviews {
+    order: -1;
+    width: 25%;
+    height: calc(100vh - 80px);
+    overflow-y: scroll;
+    z-index: 2;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  }
+  #restaurants-list li {
+    width: 100%;
+  }
+  #second-footer {
+    display: block;
+  }
+  #footer {
+    display: none;
+  }
+}
+
+@media screen and (min-width: 1441px) {
+  #restaurants-list li {
+
+  }
+  #restaurants-list li a{
+    font-size: 9pt;
+  }
+}
