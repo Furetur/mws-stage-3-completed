@@ -6,19 +6,15 @@ var map;
  */
 window.initMap = () => {
   registerServiceWorker();
-  fetchRestaurantFromURL((error, restaurant) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {
-      self.map = new google.maps.Map(document.getElementById('map'), {
-        zoom: 16,
-        center: restaurant.latlng,
-        scrollwheel: false
-      });
-      fillBreadcrumb();
-      DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
-    }
-  });
+  fetchRestaurantFromURL().then(restaurant => {
+    self.map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 16,
+      center: restaurant.latlng,
+      scrollwheel: false
+    });
+    fillBreadcrumb();
+    DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
+  }).catch(console.error);
 }
 
 const registerServiceWorker = () => {
@@ -30,26 +26,20 @@ const registerServiceWorker = () => {
 /**
  * Get current restaurant from page URL.
  */
-const fetchRestaurantFromURL = (callback) => {
+const fetchRestaurantFromURL = () => {
   if (self.restaurant) { // restaurant already fetched!
-    callback(null, self.restaurant)
-    return;
+    return Promise.resolve(self.restaurant);
   }
+
   const id = getParameterByName('id');
   if (!id) { // no id found in URL
-    error = 'No restaurant id in URL'
-    callback(error, null);
-  } else {
-    DBHelper.fetchRestaurantById(id, (error, restaurant) => {
-      self.restaurant = restaurant;
-      if (!restaurant) {
-        console.error(error);
-        return;
-      }
-      fillRestaurantHTML();
-      callback(null, restaurant)
-    });
+    return Promise.reject('No restaurant id in URL');
   }
+  return DBHelper.fetchRestaurantById(id).then((restaurant) => {
+    self.restaurant = restaurant;
+    fillRestaurantHTML();
+    return restaurant;
+  });
 }
 
 /**
@@ -71,7 +61,7 @@ const fillRestaurantHTML = (restaurant = self.restaurant) => {
   // sorry for the last error here, it wasn't really smart lol
   image.alt = `Photo of the ${restaurant.name} restaurant`;
 
-  const imageFile = DBHelper.imageUrlForRestaurant(restaurant).slice(0, -4);
+  const imageFile = DBHelper.imageUrlForRestaurant(restaurant);
 
   image.src = `${imageFile}-480.jpg`;
   image.srcset = `${imageFile}-480.jpg 1x, ${imageFile}-800.jpg 2x`;
