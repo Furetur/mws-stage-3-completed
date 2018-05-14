@@ -14,7 +14,7 @@ gulp.task('minify-html', () => {
 });
 
 gulp.task('minify-css', () => {
-    return gulp.src(['./src/css/responsive.css', './src/css/styles.css'])
+    return gulp.src(['./src/css/styles.css', './src/css/responsive.css'])
         .pipe(concat('styles.css'))
         .pipe(cleanCSS({compatibility: 'ie8'}))
         .pipe(gulp.dest('./dist/css'));

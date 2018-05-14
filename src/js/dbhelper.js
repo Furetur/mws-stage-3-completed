@@ -29,6 +29,7 @@ class DBHelper {
       }
     };
     xhr.send();
+    return fetch)_
   }
 
   /**
