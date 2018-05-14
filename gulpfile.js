@@ -23,14 +23,14 @@ gulp.task('minify-css', () => {
 gulp.task('js-main', () => {
     return gulp.src(['./src/js/dbhelper.js', './src/js/main.js'])
         .pipe(concat('main.js'))
-        .pipe(babel({
+        /*.pipe(babel({
 			presets: ['env']
         }))
         .pipe(babelMinify({
             mangle: {
               keepClassName: true
             }
-        }))
+        }))*/
         .pipe(gulp.dest('./dist/js'));
 });
 

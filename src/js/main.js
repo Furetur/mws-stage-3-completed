@@ -24,14 +24,10 @@ const registerServiceWorker = () => {
  * Fetch all neighborhoods and set their HTML.
  */
 const fetchNeighborhoods = () => {
-  DBHelper.fetchNeighborhoods((error, neighborhoods) => {
-    if (error) { // Got an error
-      console.error(error);
-    } else {
-      self.neighborhoods = neighborhoods;
-      fillNeighborhoodsHTML();
-    }
-  });
+  DBHelper.fetchNeighborhoods().then(neighborhoods => {
+    self.neighborhoods = neighborhoods;
+    fillNeighborhoodsHTML();
+  }).catch(console.error);
 }
 
 /**
@@ -51,13 +47,9 @@ const fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
  * Fetch all cuisines and set their HTML.
  */
 const fetchCuisines = () => {
-  DBHelper.fetchCuisines((error, cuisines) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {
-      self.cuisines = cuisines;
-      fillCuisinesHTML();
-    }
+  DBHelper.fetchCuisines().then(cuisines => {
+    self.cuisines = cuisines;
+    fillCuisinesHTML();
   });
 }
 
@@ -104,14 +96,10 @@ const updateRestaurants = () => {
   const cuisine = cSelect[cIndex].value;
   const neighborhood = nSelect[nIndex].value;
 
-  DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, (error, restaurants) => {
-    if (error) { // Got an error!
-      console.error(error);
-    } else {
-      resetRestaurants(restaurants);
-      fillRestaurantsHTML();
-    }
-  })
+  DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood).then(restaurants => {
+    resetRestaurants(restaurants);
+    fillRestaurantsHTML();
+  });
 }
 
 /**
@@ -186,7 +174,7 @@ const createRestaurantHTML = (restaurant) => {
 
 const createResponsiveImageFor = (imageName) => {
   // remove extension
-  imageName = imageName.slice(0, -4);
+  //imageName = imageName.slice(0, -4);
 
   const image = document.createElement('img');
   image.src = `${imageName}-360.jpg`;
