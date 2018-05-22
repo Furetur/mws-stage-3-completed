@@ -5,11 +5,13 @@ const concat = require('gulp-concat');
 const cleanCSS = require('gulp-clean-css');
 const babel = require('gulp-babel');
 const babelMinify = require('gulp-babel-minify');
+const gzip = require('gulp-gzip');
 
 
 gulp.task('minify-html', () => {
     return gulp.src('./src/*.html')
         .pipe(htmlmin({collapseWhitespace: true}))
+        .pipe(gzip())
         .pipe(gulp.dest('./dist'));
 });
 
@@ -17,20 +19,22 @@ gulp.task('minify-css', () => {
     return gulp.src(['./src/css/styles.css', './src/css/responsive.css'])
         .pipe(concat('styles.css'))
         .pipe(cleanCSS({compatibility: 'ie8'}))
+        .pipe(gzip())
         .pipe(gulp.dest('./dist/css'));
 });
 
 gulp.task('js-main', () => {
     return gulp.src(['./src/js/dbhelper.js', './src/js/main.js'])
         .pipe(concat('main.js'))
-        /*.pipe(babel({
+        .pipe(babel({
 			presets: ['env']
         }))
         .pipe(babelMinify({
             mangle: {
               keepClassName: true
             }
-        }))*/
+        }))
+        .pipe(gzip())
         .pipe(gulp.dest('./dist/js'));
 });
 
@@ -45,6 +49,7 @@ gulp.task('js-restaurant', () => {
               keepClassName: true
             }
         }))
+        .pipe(gzip())
         .pipe(gulp.dest('./dist/js'));
 });
 
