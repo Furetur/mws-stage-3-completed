@@ -31,25 +31,31 @@ function _gzip(filename, foldername) {
 }
 
 
-gulp.task('minify-html', () => {
+gulp.task('html:copy', () => {
+    return gulp.src('./src/*.html')
+        .pipe(htmlmin({collapseWhitespace: true}))
+        .pipe(gulp.dest('./dist'));
+});
+
+gulp.task('html:gzip', () => {
     return gulp.src('./src/*.html')
         .pipe(htmlmin({collapseWhitespace: true}))
         .pipe(gzip())
         .pipe(gulp.dest('./dist'));
 });
 
-
-gulp.task('html:copy', () => {
-    return _copy('*.html');
-});
-
-gulp.task('html:gzip', () => {
-    return _gzip('*.html');
-});
+gulp.task('html', ['html:copy', 'html:gzip']);
 
 gulp.task('html', ['html:copy', 'html:gzip']);
 
-gulp.task('minify-css', () => {
+gulp.task('css:copy', () => {
+    return gulp.src(['./src/css/styles.css', './src/css/responsive.css'])
+        .pipe(concat('styles.css'))
+        .pipe(cleanCSS({compatibility: 'ie8'}))
+        .pipe(gulp.dest('./dist/css'));
+});
+
+gulp.task('css:gzip', () => {
     return gulp.src(['./src/css/styles.css', './src/css/responsive.css'])
         .pipe(concat('styles.css'))
         .pipe(cleanCSS({compatibility: 'ie8'}))
@@ -57,9 +63,43 @@ gulp.task('minify-css', () => {
         .pipe(gulp.dest('./dist/css'));
 });
 
-gulp.task('js-main', () => {
-    return gulp.src(['./src/js/dbhelper.js', './src/js/main.js'])
+gulp.task('css', ['css:copy', 'css:gzip']);
+
+gulp.task('js-main:copy', () => {
+    return gulp.src(['./src/js/localforage.min.js', './src/js/dbhelper.js', './src/js/main.js'])
         .pipe(concat('main.js'))
+        /*.pipe(babel({
+			presets: ['env']
+        }))
+        .pipe(babelMinify({
+            mangle: {
+              keepClassName: true
+            }
+        }))*/
+        .pipe(gulp.dest('./dist/js'));
+});
+
+
+gulp.task('js-main:gzip', () => {
+    return gulp.src(['./src/js/localforage.min.js', './src/js/dbhelper.js', './src/js/main.js'])
+        .pipe(concat('main.js'))
+        /*.pipe(babel({
+			presets: ['env']
+        }))
+        .pipe(babelMinify({
+            mangle: {
+              keepClassName: true
+            }
+        }))*/
+        .pipe(gzip())
+        .pipe(gulp.dest('./dist/js'));
+});
+
+gulp.task('js-main', ['js-main:copy', 'js-main:gzip']);
+
+gulp.task('js-restaurant:copy', () => {
+    return gulp.src(['./src/js/localforage.min.js', './src/js/dbhelper.js', './src/js/restaurant_info.js'])
+        .pipe(concat('restaurant.js'))
         .pipe(babel({
 			presets: ['env']
         }))
@@ -68,12 +108,11 @@ gulp.task('js-main', () => {
               keepClassName: true
             }
         }))
-        .pipe(gzip())
         .pipe(gulp.dest('./dist/js'));
 });
 
-gulp.task('js-restaurant', () => {
-    return gulp.src(['./src/js/dbhelper.js', './src/js/restaurant_info.js'])
+gulp.task('js-restaurant:gzip', () => {
+    return gulp.src(['./src/js/localforage.min.js', './src/js/dbhelper.js', './src/js/restaurant_info.js'])
         .pipe(concat('restaurant.js'))
         .pipe(babel({
 			presets: ['env']
@@ -87,6 +126,10 @@ gulp.task('js-restaurant', () => {
         .pipe(gulp.dest('./dist/js'));
 });
 
+gulp.task('js-restaurant', ['js-restaurant:copy', 'js-restaurant:gzip']);
+
+gulp.task('js', ['js-main', 'js-restaurant']);
+
 gulp.task('sw:copy', () => {
     return gulp.src('./src/sw.js')
         .pipe(gulp.dest('./dist'))
@@ -97,6 +140,8 @@ gulp.task('sw:gzip', () => {
         .pipe(gzip())
         .pipe(gulp.dest('./dist'))
 });
+
+gulp.task('sw', ['sw:copy', 'sw:gzip']);
 
 gulp.task('icon-192', () => {
     return gulp.src('./src/icon.png')
@@ -112,8 +157,6 @@ gulp.task('icon-512', () => {
         .pipe(gulp.dest('./dist'));
 })
 
-gulp.task('sw', ['sw:copy', 'sw:gzip']);
+gulp.task('js', ['js-main', 'js-restaurant']);
 
-gulp.task('minify-js', ['js-main', 'js-restaurant']);
-
-gulp.task('build', ['minify-html', 'minify-css', 'minify-js']);
+gulp.task('build', ['html', 'css', 'js']);

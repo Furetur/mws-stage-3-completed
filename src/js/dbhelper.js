@@ -12,17 +12,37 @@ class DBHelper {
   }
 
   /**
+   * Update the IDB
+   */
+  static updateData() {
+    return fetch(DBHelper.DATABASE_URL)
+      .then(res => res.json())
+      .then(restaurants => {
+        return localforage.clear().then(() => {
+          return restaurants;
+        });
+      })
+      .then(restaurants => {
+        const promises = restaurants.map(restaurant => localforage.setItem(restaurant.id, restaurant));
+        return Promise.all(promises);
+      });
+  }
+
+  /**
    * Fetch all restaurants.
    */
   static fetchRestaurants() {
-    return fetch(DBHelper.DATABASE_URL).then(res => res.json());
+    return localforage.keys().then(keys => {
+      const promises = keys.map(key => localforage.getItem(key));
+      return Promise.all(promises);
+    });
   }
 
   /**
    * Fetch a restaurant by its ID.
    */
   static fetchRestaurantById(id) {
-    return fetch(DBHelper.DATABASE_URL + `/${id}`).then(res => res.json());
+    return localforage.getItem(id);
   }
 
   /**

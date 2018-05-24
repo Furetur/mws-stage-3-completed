@@ -9,9 +9,18 @@ var markers = []
  */
 document.addEventListener('DOMContentLoaded', (event) => {
   registerServiceWorker();
+  updateContent();
+  DBHelper.updateData().then(() => {
+    updateContent();
+  })
+});
+
+
+const updateContent = () => {
   fetchNeighborhoods();
   fetchCuisines();
-});
+  updateRestaurants();
+}
 
 
 const registerServiceWorker = () => {
@@ -80,7 +89,7 @@ window.initMap = () => {
     center: loc,
     scrollwheel: false
   });
-  updateRestaurants();
+  
 }
 
 /**

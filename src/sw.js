@@ -6,7 +6,6 @@ const filesToCache = [
   'css/styles.css',
   'js/main.js',
   'js/restaurant.js',
-  'http://localhost:1337/restaurants',
 ];
 
 openCache = () => {
