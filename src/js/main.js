@@ -1,39 +1,125 @@
+const LOAD_FIRST_CARDS = 4;
+
 let restaurants,
   neighborhoods,
   cuisines
 var map
 var markers = []
 
+
 /**
- * Fetch neighborhoods and cuisines as soon as the page is loaded.
+ * Fetch neighborhoods and cuisines while the page is loading
  */
-document.addEventListener('DOMContentLoaded', (event) => {
-  registerServiceWorker();
-  updateContent();
-  DBHelper.updateData().then(() => {
-    updateContent();
-  })
+document.addEventListener('load', async () => {
+  console.info('Loading...');
+  await fetchAll();
+  await DBHelper.updateData();
+  await fetchAll();
 });
+
+
+document.addEventListener('DOMContentLoaded', async (event) => {
+  registerServiceWorker();
+  await updateRestaurants();
+
+  const cardsToPreload = getCards().slice(0, LOAD_FIRST_CARDS);
+  implementLazyLoading(cardsToPreload);
+  console.info('Loaded!');
+});
+
+
+const fetchAll = () => {
+  return Promise.all(
+    [fetchNeighborhoods(), fetchCuisines()]
+  )
+}
 
 
 const updateContent = () => {
   fetchNeighborhoods();
   fetchCuisines();
-  updateRestaurants();
-}
+  return updateRestaurants();
+};
 
 
 const registerServiceWorker = () => {
   if('serviceWorker' in navigator) {
     navigator.serviceWorker.register('./sw.js', {scope: './'});
   }
+};
+
+const loadFirstCards = () => {
+  const cards = getCards().slice(0, LOAD_FIRST_CARDS);
+  loadCards(cards);
+};
+
+const implementLazyLoading = (cardsToPreload) => {
+  const cards = document.querySelectorAll('.card');
+  setUpObserver(cards, cardsToPreload);
 }
+
+
+const setUpObserver = (elements, cardsToPreload) => {
+  const manageEntry = (entry) => {
+    const mustBePreloaded = cardsToPreload.includes(entry.target)
+
+    if (!entry.isIntersecting && !mustBePreloaded) {
+      return;
+    }
+
+    if (mustBePreloaded) {
+      cardsToPreload = cardsToPreload.reduce((arr, cur) => (cur === entry.target)? arr : [...arr, cur], []);
+    }
+
+    loadCard(entry.target);
+    io.unobserve(entry.target);
+  }
+
+  const io = new IntersectionObserver(
+    entries => entries.forEach(manageEntry)
+  )
+
+  elements.forEach(el => io.observe(el));
+}
+
+
+const loadCard = (card) => {
+  if (card.getAttribute('loaded') === 'true') {
+    return;
+  }
+
+  card.setAttribute('loaded', true);
+
+  const image = card.querySelector('img');
+  showResponsiveImage(image);
+  console.log('loaded', card.querySelector('h2').textContent);
+}
+
+
+const loadCards = (cards) => cards.forEach(loadCard);
+
+
+const unloadCard = (card) => {
+  if (card.getAttribute('loaded') === 'false') {
+    return;
+  }
+  
+  card.setAttribute('loaded', false);
+
+  const image = card.querySelector('img');
+  hideResponsiveImage(image);
+  console.log('unloaded', card.querySelector('h2').textContent);
+}
+
+
+const getCards = () => Array.from(document.querySelectorAll('.card'));
+
 
 /**
  * Fetch all neighborhoods and set their HTML.
  */
 const fetchNeighborhoods = () => {
-  DBHelper.fetchNeighborhoods().then(neighborhoods => {
+  return DBHelper.fetchNeighborhoods().then(neighborhoods => {
     self.neighborhoods = neighborhoods;
     fillNeighborhoodsHTML();
   }).catch(console.error);
@@ -56,7 +142,7 @@ const fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
  * Fetch all cuisines and set their HTML.
  */
 const fetchCuisines = () => {
-  DBHelper.fetchCuisines().then(cuisines => {
+  return DBHelper.fetchCuisines().then(cuisines => {
     self.cuisines = cuisines;
     fillCuisinesHTML();
   });
@@ -105,7 +191,7 @@ const updateRestaurants = () => {
   const cuisine = cSelect[cIndex].value;
   const neighborhood = nSelect[nIndex].value;
 
-  DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood).then(restaurants => {
+  return DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood).then(restaurants => {
     resetRestaurants(restaurants);
     fillRestaurantsHTML();
   });
@@ -143,9 +229,10 @@ const fillRestaurantsHTML = (restaurants = self.restaurants) => {
 const createRestaurantHTML = (restaurant) => {
   const li = document.createElement('li');
   li.classList.add('card');
+  li.setAttribute('loaded', false); // the card is unloaded by default
 
   const imageName = DBHelper.imageUrlForRestaurant(restaurant);
-  const image = createResponsiveImageFor(imageName);
+  const image = prepareImageFor(imageName);
   image.className = 'restaurant-img';
   li.append(image);
 
@@ -180,6 +267,28 @@ const createRestaurantHTML = (restaurant) => {
   return li
 }
 
+
+const prepareImageFor = (imageName) => {
+  const image = document.createElement('img');
+  image.setAttribute('imagename', imageName);
+  image.alt = 'Photo of the restaurant'
+
+  return image;
+}
+
+
+const showResponsiveImage = (imageElement) => {
+  const imageName = imageElement.getAttribute('imageName');
+
+  imageElement.src = `${imageName}-360.jpg`;
+  imageElement.srcset = `${imageName}-360.jpg 1x, ${imageName}-800.jpg 2x`;
+}
+
+
+const hideResponsiveImage = (imageElement) => {
+  imageElement.src = '';
+  imageElement.srcset = '';
+}
 
 const createResponsiveImageFor = (imageName) => {
   // remove extension
