@@ -1,6 +1,10 @@
 /**
  * Common database helper functions.
  */
+class EmptyStorageError extends Error {
+
+}
+
 class DBHelper {
 
   /**
@@ -9,6 +13,31 @@ class DBHelper {
    */
   static get DATABASE_URL() {
     return `http://localhost:1337/restaurants`;
+  }
+
+  /**
+   * Fetch new data
+   */
+  static fetchNewData() {
+    return fetch(DBHelper.DATABASE_URL)
+      .then(res => res.json())
+  }
+
+  /**
+   * Clear the IDB and put the new data
+   */
+
+  static putData(data) {
+    return localforage.clear().then(() => {
+      const promises = data.map(restaurant => localforage.setItem(restaurant.id, restaurant));
+        return Promise.all(promises);
+    });
+  }
+
+  static isEmpty(data) {
+    return localforage.length().then(length => {
+      return length === 0;
+    });
   }
 
   /**
@@ -33,6 +62,9 @@ class DBHelper {
    */
   static fetchRestaurants() {
     return localforage.keys().then(keys => {
+      if (keys.length === 0) {
+        throw new EmptyStorageError();
+      }
       const promises = keys.map(key => localforage.getItem(key));
       return Promise.all(promises);
     });

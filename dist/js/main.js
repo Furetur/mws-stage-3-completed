@@ -152,21 +152,33 @@ var markers = []
 /**
  * Fetch neighborhoods and cuisines while the page is loading
  */
-document.addEventListener('load', async () => {
-  console.info('Loading...');
-  await fetchAll();
-  await DBHelper.updateData();
-  await fetchAll();
-});
+
 
 
 document.addEventListener('DOMContentLoaded', async (event) => {
+  console.info('%c Loading...', 'color: orange;');
+  await fetchAll();
+  DBHelper.updateData().then(() => {
+    fetchAll();
+  });
+
   registerServiceWorker();
   await updateRestaurants();
 
-  const cardsToPreload = getCards().slice(0, LOAD_FIRST_CARDS);
-  implementLazyLoading(cardsToPreload);
-  console.info('Loaded!');
+  console.info('%c Loaded!', 'color: green;');
+});
+
+
+window.addEventListener('load', async () => {
+  console.info('%c Idling...', 'color: purple;');
+  const startTime = Date.now();
+
+  await DBHelper.updateData();
+  await fetchAll();
+
+  const endTime = Date.now();
+
+  console.log(`%c Idled for ${endTime - startTime}ms`, 'color: purple;')
 });
 
 
@@ -257,6 +269,9 @@ const unloadCard = (card) => {
 const getCards = () => Array.from(document.querySelectorAll('.card'));
 
 
+const getCardsToPreload = () => getCards().slice(0, LOAD_FIRST_CARDS);
+
+
 /**
  * Fetch all neighborhoods and set their HTML.
  */
@@ -264,7 +279,8 @@ const fetchNeighborhoods = () => {
   return DBHelper.fetchNeighborhoods().then(neighborhoods => {
     self.neighborhoods = neighborhoods;
     fillNeighborhoodsHTML();
-  }).catch(console.error);
+    return neighborhoods;
+  });
 }
 
 /**
@@ -287,6 +303,7 @@ const fetchCuisines = () => {
   return DBHelper.fetchCuisines().then(cuisines => {
     self.cuisines = cuisines;
     fillCuisinesHTML();
+    return cuisines;
   });
 }
 
@@ -336,6 +353,7 @@ const updateRestaurants = () => {
   return DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood).then(restaurants => {
     resetRestaurants(restaurants);
     fillRestaurantsHTML();
+    implementLazyLoading(getCardsToPreload());
   });
 }
 
