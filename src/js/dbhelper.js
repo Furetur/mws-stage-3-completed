@@ -30,7 +30,7 @@ class DBHelper {
   static putData(data) {
     return localforage.clear().then(() => {
       const promises = data.map(restaurant => localforage.setItem(restaurant.id, restaurant));
-        return Promise.all(promises);
+      return Promise.all(promises);
     });
   }
 
@@ -114,7 +114,7 @@ class DBHelper {
   /**
    * Fetch all neighborhoods with proper error handling.
    */
-  static fetchNeighborhoods(callback) {
+  static fetchNeighborhoods() {
     return DBHelper.fetchRestaurants().then(restaurants =>
       restaurants
         // Get all neighborhoods from all restaurants

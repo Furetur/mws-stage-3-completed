@@ -54,6 +54,7 @@
             <h2 id="restaurant-name"></h2>
             <p id="restaurant-cuisine"></p>
             <p id="restaurant-address"></p>
+            <button id="add-restaurant-to-favorites" class="action-button">♡</button>
           </div>
         </div>
         <table id="restaurant-hours">
@@ -71,6 +72,21 @@
       <!-- end restaurant -->
       <!-- Beginning reviews -->
       <section id="reviews-container">
+        <h2>Reviews</h2>
+        <h3>Add a review</h3>
+        <div id="reviews-form">
+          <input type="text" id="reviewer-name-field" placeholder="Your name">
+          <textarea id="review-comment-field" placeholder="Write anything about the restaurant" cols="30" rows="10"></textarea>
+          <div class="rating-stars-picker">
+            <span class="star" id="1">☆</span>
+            <span class="star" id="2">☆</span>
+            <span class="star" id="3">☆</span>
+            <span class="star" id="4">☆</span>
+            <span class="star" id="5">☆</span>
+          </div>
+          <button id="submit-review" class="action-button">Submit</button>
+        </div>
+        <h3>All reviews</h3>
         <ul id="reviews-list"></ul>
       </section>
       <!-- End reviews -->

@@ -8,6 +8,10 @@
 /**
  * Common database helper functions.
  */
+class EmptyStorageError extends Error {
+
+}
+
 class DBHelper {
 
   /**
@@ -16,6 +20,31 @@ class DBHelper {
    */
   static get DATABASE_URL() {
     return `http://localhost:1337/restaurants`;
+  }
+
+  /**
+   * Fetch new data
+   */
+  static fetchNewData() {
+    return fetch(DBHelper.DATABASE_URL)
+      .then(res => res.json())
+  }
+
+  /**
+   * Clear the IDB and put the new data
+   */
+
+  static putData(data) {
+    return localforage.clear().then(() => {
+      const promises = data.map(restaurant => localforage.setItem(restaurant.id, restaurant));
+      return Promise.all(promises);
+    });
+  }
+
+  static isEmpty(data) {
+    return localforage.length().then(length => {
+      return length === 0;
+    });
   }
 
   /**
@@ -40,6 +69,9 @@ class DBHelper {
    */
   static fetchRestaurants() {
     return localforage.keys().then(keys => {
+      if (keys.length === 0) {
+        throw new EmptyStorageError();
+      }
       const promises = keys.map(key => localforage.getItem(key));
       return Promise.all(promises);
     });
@@ -89,7 +121,7 @@ class DBHelper {
   /**
    * Fetch all neighborhoods with proper error handling.
    */
-  static fetchNeighborhoods(callback) {
+  static fetchNeighborhoods() {
     return DBHelper.fetchRestaurants().then(restaurants =>
       restaurants
         // Get all neighborhoods from all restaurants
@@ -140,7 +172,7 @@ class DBHelper {
 
 }
 
-const LOAD_FIRST_CARDS = 4;
+const LOAD_FIRST_CARDS = 1;
 
 let restaurants,
   neighborhoods,
@@ -157,13 +189,35 @@ var markers = []
 
 document.addEventListener('DOMContentLoaded', async (event) => {
   console.info('%c Loading...', 'color: orange;');
-  await fetchAll();
-  DBHelper.updateData().then(() => {
-    fetchAll();
-  });
+
+  showSpinner();
+
+  let restaurants;
+
+  try {
+    restaurants = await DBHelper.fetchRestaurants();
+  } catch(e) {
+    if (e instanceof EmptyStorageError) {
+      // the storage is empty
+      restaurants = await DBHelper.fetchNewData();
+      await DBHelper.putData(restaurants);
+
+    } else {
+      console.error(e);
+    }
+  }
+
+  setDropdowns(restaurants);
+
+  hideSpinner();
 
   registerServiceWorker();
-  await updateRestaurants();
+
+  try {
+    await updateRestaurants();
+  } catch(e) {
+    console.error('Shit fuck', e);
+  }
 
   console.info('%c Loaded!', 'color: green;');
 });
@@ -173,8 +227,8 @@ window.addEventListener('load', async () => {
   console.info('%c Idling...', 'color: purple;');
   const startTime = Date.now();
 
-  await DBHelper.updateData();
-  await fetchAll();
+  // await DBHelper.updateData();
+  // await fetchAll();
 
   const endTime = Date.now();
 
@@ -186,6 +240,33 @@ const fetchAll = () => {
   return Promise.all(
     [fetchNeighborhoods(), fetchCuisines()]
   )
+}
+
+const setDropdowns = (restaurants) => {
+  setNeighborhoods(restaurants);
+  setCuisines(restaurants);
+}
+
+const setCuisines = (restaurants) => {
+  const cuisines = getCuisinesFromRestaurants(restaurants);
+  fillCuisinesHTML(cuisines);
+}
+
+const setNeighborhoods = (restaurants) => {
+  const neighborhoods = getNeighborhoodsFromRestaurants(restaurants);
+  fillNeighborhoodsHTML(neighborhoods);
+}
+
+const getCuisinesFromRestaurants = (restaurants) => {
+  return restaurants.map((v, i) => restaurants[i].cuisine_type)
+    .filter((v, i, cuisines) => cuisines.indexOf(v) == i)
+}
+
+const getNeighborhoodsFromRestaurants = (restaurants) => {
+  // Get all neighborhoods from all restaurants
+  return restaurants.map((v, i) => restaurants[i].neighborhood)
+    // Remove duplicates from neighborhoods
+    .filter((v, i, neighborhoods) => neighborhoods.indexOf(v) == i);
 }
 
 
@@ -201,6 +282,14 @@ const registerServiceWorker = () => {
     navigator.serviceWorker.register('./sw.js', {scope: './'});
   }
 };
+
+const showSpinner = () => {
+  document.querySelector('.spinner').style.display = 'block';
+}
+
+const hideSpinner = () => {
+  document.querySelector('.spinner').style.display = 'none';
+}
 
 const loadFirstCards = () => {
   const cards = getCards().slice(0, LOAD_FIRST_CARDS);
@@ -352,7 +441,7 @@ const updateRestaurants = () => {
 
   return DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood).then(restaurants => {
     resetRestaurants(restaurants);
-    fillRestaurantsHTML();
+    fillRestaurantsHTML(restaurants);
     implementLazyLoading(getCardsToPreload());
   });
 }
@@ -418,11 +507,12 @@ const createRestaurantHTML = (restaurant) => {
   li.append(cardAction);
 
   const more = document.createElement('a');
+  more.classList.add('action-button')
   more.innerHTML = 'View Details';
   more.href = DBHelper.urlForRestaurant(restaurant);
   more.setAttribute('aria-label', `View details for ${restaurant.name}`);
 
-  cardAction.append(more)
+  cardAction.append(more);
 
   return li
 }
