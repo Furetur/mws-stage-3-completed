@@ -460,7 +460,10 @@ nav h1 a:focus {
 }
 
 .star {
+  margin-left: -3px;
   font-size: 1.75em;
+  font-weight: bolder;
+  color: #ffca28;
 }
 
 /* Skip links */

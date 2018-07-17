@@ -100,28 +100,28 @@ gulp.task('js-main', ['js-main:copy', 'js-main:gzip']);
 gulp.task('js-restaurant:copy', () => {
     return gulp.src(['./src/js/localforage.min.js', './src/js/dbhelper.js', './src/js/restaurant_info.js'])
         .pipe(concat('restaurant.js'))
-        .pipe(babel({
+        /*.pipe(babel({
 			presets: ['env']
         }))
         .pipe(babelMinify({
             mangle: {
               keepClassName: true
             }
-        }))
+        }))*/
         .pipe(gulp.dest('./dist/js'));
 });
 
 gulp.task('js-restaurant:gzip', () => {
     return gulp.src(['./src/js/localforage.min.js', './src/js/dbhelper.js', './src/js/restaurant_info.js'])
         .pipe(concat('restaurant.js'))
-        .pipe(babel({
+        /*.pipe(babel({
 			presets: ['env']
         }))
         .pipe(babelMinify({
             mangle: {
               keepClassName: true
             }
-        }))
+        }))*/
         .pipe(gzip())
         .pipe(gulp.dest('./dist/js'));
 });

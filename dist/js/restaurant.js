@@ -1,1 +1,485 @@
-"use strict";var _createClass=function(){function a(a,b){for(var c,d=0;d<b.length;d++)c=b[d],c.enumerable=c.enumerable||!1,c.configurable=!0,"value"in c&&(c.writable=!0),Object.defineProperty(a,c.key,c)}return function(b,c,d){return c&&a(b.prototype,c),d&&a(b,d),b}}(),_typeof="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(a){return typeof a}:function(a){return a&&"function"==typeof Symbol&&a.constructor===Symbol&&a!==Symbol.prototype?"symbol":typeof a};function _classCallCheck(a,b){if(!(a instanceof b))throw new TypeError("Cannot call a class as a function")}function _possibleConstructorReturn(a,b){if(!a)throw new ReferenceError("this hasn't been initialised - super() hasn't been called");return b&&("object"==typeof b||"function"==typeof b)?b:a}function _inherits(a,b){if("function"!=typeof b&&null!==b)throw new TypeError("Super expression must either be null or a function, not "+typeof b);a.prototype=Object.create(b&&b.prototype,{constructor:{value:a,enumerable:!1,writable:!0,configurable:!0}}),b&&(Object.setPrototypeOf?Object.setPrototypeOf(a,b):a.__proto__=b)}!function(c){if("object"==("undefined"==typeof exports?"undefined":_typeof(exports))&&"undefined"!=typeof module)module.exports=c();else if("function"==typeof define&&define.amd)define([],c);else{var a;a="undefined"==typeof window?"undefined"==typeof global?"undefined"==typeof self?this:self:global:window,a.localforage=c()}}(function(){return function l(m,a,b){function d(e,f){if(!a[e]){if(!m[e]){var g="function"==typeof require&&require;if(!f&&g)return g(e,!0);if(c)return c(e,!0);var h=new Error("Cannot find module '"+e+"'");throw h.code="MODULE_NOT_FOUND",h}var i=a[e]={exports:{}};m[e][0].call(i.exports,function(b){var a=m[e][1][b];return d(a||b)},i,i.exports,l,m,a,b)}return a[e].exports}for(var c="function"==typeof require&&require,e=0;e<b.length;e++)d(b[e]);return d}({1:[function(c,m){(function(n){"use strict";function a(){j=!0;for(var d,e,f=p.length;f;){for(e=p,p=[],d=-1;++d<f;)e[d]();f=p.length}j=!1}function b(b){1!==p.push(b)||j||c()}var c,d=n.MutationObserver||n.WebKitMutationObserver;if(d){var f=0,o=new d(a),h=n.document.createTextNode("");o.observe(h,{characterData:!0}),c=function(){h.data=f=++f%2}}else if(n.setImmediate||void 0===n.MessageChannel)c="document"in n&&"onreadystatechange"in n.document.createElement("script")?function(){var c=n.document.createElement("script");c.onreadystatechange=function(){a(),c.onreadystatechange=null,c.parentNode.removeChild(c),c=null},n.document.documentElement.appendChild(c)}:function(){setTimeout(a,0)};else{var i=new n.MessageChannel;i.port1.onmessage=a,c=function(){i.port2.postMessage(0)}}var j,p=[];m.exports=b}).call(this,"undefined"==typeof global?"undefined"==typeof self?"undefined"==typeof window?{}:window:self:global)},{}],2:[function(k,a,b){"use strict";function l(){}function d(b){if("function"!=typeof b)throw new TypeError("resolver must be a function");this.state=p,this.queue=[],this.outcome=void 0,b!==l&&h(this,b)}function e(d,a,b){this.promise=d,"function"==typeof a&&(this.onFulfilled=a,this.callFulfilled=this.otherCallFulfilled),"function"==typeof b&&(this.onRejected=b,this.callRejected=this.otherCallRejected)}function f(e,a,b){j(function(){var c;try{c=a(b)}catch(a){return m.reject(e,a)}c===e?m.reject(e,new TypeError("Cannot resolve promise with itself")):m.resolve(e,c)})}function g(c){var a=c&&c.then;if(c&&"object"==("undefined"==typeof c?"undefined":_typeof(c))&&"function"==typeof a)return function(){a.apply(c,arguments)}}function h(e,a){function b(a){d||(d=!0,m.reject(e,a))}function c(a){d||(d=!0,m.resolve(e,a))}var d=!1,h=i(function(){a(c,b)});"error"===h.status&&b(h.value)}function i(d,a){var b={};try{b.value=d(a),b.status="success"}catch(c){b.status="error",b.value=c}return b}var j=k(1),m={},n=["REJECTED"],o=["FULFILLED"],p=["PENDING"];a.exports=b=d,d.prototype.catch=function(b){return this.then(null,b)},d.prototype.then=function(d,a){if("function"!=typeof d&&this.state===o||"function"!=typeof a&&this.state===n)return this;var b=new this.constructor(l);return this.state===p?this.queue.push(new e(b,d,a)):f(b,this.state===o?d:a,this.outcome),b},e.prototype.callFulfilled=function(b){m.resolve(this.promise,b)},e.prototype.otherCallFulfilled=function(b){f(this.promise,this.onFulfilled,b)},e.prototype.callRejected=function(b){m.reject(this.promise,b)},e.prototype.otherCallRejected=function(b){f(this.promise,this.onRejected,b)},m.resolve=function(j,a){var b=i(g,a);if("error"===b.status)return m.reject(j,b.value);var c=b.value;if(c)h(j,c);else{j.state=o,j.outcome=a;for(var d=-1,k=j.queue.length;++d<k;)j.queue[d].callFulfilled(a)}return j},m.reject=function(e,a){e.state=n,e.outcome=a;for(var b=-1,f=e.queue.length;++b<f;)e.queue[b].callRejected(a);return e},b.resolve=function(b){return b instanceof this?b:m.resolve(new this(l),b)},b.reject=function(c){var a=new this(l);return m.reject(a,c)},b.all=function(d){function a(f,h){function a(b){n[h]=b,++g!==c||e||(e=!0,m.resolve(o,n))}k.resolve(f).then(a,function(b){e||(e=!0,m.reject(o,b))})}var k=this;if("[object Array]"!==Object.prototype.toString.call(d))return this.reject(new TypeError("must be an array"));var c=d.length,e=!1;if(!c)return this.resolve([]);for(var n=Array(c),g=0,b=-1,o=new this(l);++b<c;)a(d[b],b);return o},b.race=function(d){function a(c){b.resolve(c).then(function(b){e||(e=!0,m.resolve(j,b))},function(b){e||(e=!0,m.reject(j,b))})}var b=this;if("[object Array]"!==Object.prototype.toString.call(d))return this.reject(new TypeError("must be an array"));var c=d.length,e=!1;if(!c)return this.resolve([]);for(var i=-1,j=new this(l);++i<c;)a(d[i]);return j}},{1:1}],3:[function(c){(function(a){"use strict";"function"!=typeof a.Promise&&(a.Promise=c(2))}).call(this,"undefined"==typeof global?"undefined"==typeof self?"undefined"==typeof window?{}:window:self:global)},{2:2}],4:[function(c,a){"use strict";function b(c,a){if(!(c instanceof a))throw new TypeError("Cannot call a class as a function")}function e(f,g){f=f||[],g=g||{};try{return new Blob(f,g)}catch(a){if("TypeError"!==a.name)throw a;for(var h="undefined"==typeof BlobBuilder?"undefined"==typeof MSBlobBuilder?"undefined"==typeof MozBlobBuilder?WebKitBlobBuilder:MozBlobBuilder:MSBlobBuilder:BlobBuilder,c=new h,d=0;d<f.length;d+=1)c.append(f[d]);return c.getBlob(g.type)}}function C(c,d){d&&c.then(function(b){d(null,b)},function(b){d(b)})}function D(d,a,b){"function"==typeof a&&d.then(a),"function"==typeof b&&d.catch(b)}function g(b){return"string"!=typeof b&&(console.warn(b+" used as a key, but it is not a string."),b=b+""),b}function h(){if(arguments.length&&"function"==typeof arguments[arguments.length-1])return arguments[arguments.length-1]}function d(f){for(var a=f.length,b=new ArrayBuffer(a),c=new Uint8Array(b),d=0;d<a;d++)c[d]=f.charCodeAt(d);return b}function f(f){return new N(function(g){var a=f.transaction(O,T),b=e([""]);a.objectStore(O).put(b,"key"),a.onabort=function(b){b.preventDefault(),b.stopPropagation(),g(!1)},a.oncomplete=function(){var b=navigator.userAgent.match(/Chrome\/(\d+)/),a=navigator.userAgent.match(/Edge\//);g(a||!b||43<=parseInt(b[1],10))}}).catch(function(){return!1})}function i(b){return"boolean"==typeof P?N.resolve(P):f(b).then(function(b){return P=b})}function j(d){var a=Q[d.name],e={};e.promise=new N(function(c,a){e.resolve=c,e.reject=a}),a.deferredOperations.push(e),a.dbReady=a.dbReady?a.dbReady.then(function(){return e.promise}):e.promise}function k(d){var a=Q[d.name],b=a.deferredOperations.pop();if(b)return b.resolve(),b.promise}function l(e,a){var b=Q[e.name],c=b.deferredOperations.pop();if(c)return c.reject(a),c.promise}function m(g,a){return new N(function(b,c){if(Q[g.name]=Q[g.name]||w(),g.db){if(!a)return b(g.db);j(g),g.db.close()}var d=[g.name];a&&d.push(g.version);var e=M.open.apply(M,d);a&&(e.onupgradeneeded=function(a){var b=e.result;try{b.createObjectStore(g.storeName),1>=a.oldVersion&&b.createObjectStore(O)}catch(b){if("ConstraintError"!==b.name)throw b;console.warn("The database \""+g.name+"\" has been upgraded from version "+a.oldVersion+" to version "+a.newVersion+", but the storage \""+g.storeName+"\" already exists.")}}),e.onerror=function(b){b.preventDefault(),c(e.error)},e.onsuccess=function(){b(e.result),k(g)}})}function n(b){return m(b,!1)}function o(b){return m(b,!0)}function p(g,a){if(!g.db)return!0;var b=!g.db.objectStoreNames.contains(g.storeName),c=g.version<g.db.version,d=g.version>g.db.version;if(c&&(g.version!==a&&console.warn("The database \""+g.name+"\" can't be downgraded from version "+g.db.version+" to version "+g.version+"."),g.version=g.db.version),d||b){if(b){var e=g.db.version+1;e>g.version&&(g.version=e)}return!0}return!1}function q(e){return new N(function(a,b){var c=new FileReader;c.onerror=b,c.onloadend=function(b){var c=btoa(b.target.result||"");a({__local_forage_encoded_blob:!0,data:c,type:e.type})},c.readAsBinaryString(e)})}function r(b){return e([d(atob(b.data))],{type:b.type})}function s(b){return b&&b.__local_forage_encoded_blob}function t(d){var e=this,a=e._initReady().then(function(){var b=Q[e._dbInfo.name];if(b&&b.dbReady)return b.dbReady});return D(a,d,d),a}function u(f){j(f);for(var a,g=Q[f.name],b=g.forages,c=0;c<b.length;c++)a=b[c],a._dbInfo.db&&(a._dbInfo.db.close(),a._dbInfo.db=null);return f.db=null,n(f).then(function(a){return f.db=a,p(f)?o(f):a}).then(function(a){f.db=g.db=a;for(var c=0;c<b.length;c++)b[c]._dbInfo.db=a}).catch(function(a){throw l(f,a),a})}function v(f,a,b,c){void 0===c&&(c=1);try{var g=f.db.transaction(f.storeName,a);b(null,g)}catch(d){if(0<c&&(!f.db||"InvalidStateError"===d.name||"NotFoundError"===d.name))return N.resolve().then(function(){if(!f.db||"NotFoundError"===d.name&&!f.db.objectStoreNames.contains(f.storeName)&&f.version<=f.db.version)return f.db&&(f.version=f.db.version+1),o(f)}).then(function(){return u(f).then(function(){v(f,a,b,c-1)})}).catch(b);b(d)}}function w(){return{forages:[],db:null,dbReady:null,deferredOperations:[]}}function x(l){var a,m,n,o,p,q=.75*l.length,r=l.length,h=0;"="===l[l.length-1]&&(q--,"="===l[l.length-2]&&q--);var s=new ArrayBuffer(q),j=new Uint8Array(s);for(a=0;a<r;a+=4)m=V.indexOf(l[a]),n=V.indexOf(l[a+1]),o=V.indexOf(l[a+2]),p=V.indexOf(l[a+3]),j[h++]=m<<2|n>>4,j[h++]=(15&n)<<4|o>>2,j[h++]=(3&o)<<6|63&p;return s}function y(e){var a,f=new Uint8Array(e),c="";for(a=0;a<f.length;a+=3)c+=V[f[a]>>2],c+=V[(3&f[a])<<4|f[a+1]>>4],c+=V[(15&f[a+1])<<2|f[a+2]>>6],c+=V[63&f[a+2]];return 2==f.length%3?c=c.substring(0,c.length-1)+"=":1==f.length%3&&(c=c.substring(0,c.length-2)+"=="),c}function z(e,a,b,c){e.executeSql("CREATE TABLE IF NOT EXISTS "+a.storeName+" (id INTEGER PRIMARY KEY, key unique, value)",[],b,c)}function A(g,i,b,c,d,e){g.executeSql(b,c,d,function(f,j){j.code===j.SYNTAX_ERR?f.executeSql("SELECT name FROM sqlite_master WHERE type='table' AND name = ?",[name],function(f,a){a.rows.length?e(f,j):z(f,i,function(){f.executeSql(b,c,d,e)},e)},e):e(f,j)},e)}function B(j,k,i,c){var d=this;j=g(j);var e=new N(function(a,e){d.ready().then(function(){void 0===k&&(k=null);var f=k,g=d._dbInfo;g.serializer.serialize(k,function(h,b){b?e(b):g.db.transaction(function(b){A(b,g,"INSERT OR REPLACE INTO "+g.storeName+" (key, value) VALUES (?, ?)",[j,h],function(){a(f)},function(c,a){e(a)})},function(g){if(g.code===g.QUOTA_ERR){if(0<c)return void a(B.apply(d,[j,f,i,c-1]));e(g)}})})}).catch(e)});return C(e,i),e}function E(g){return new N(function(a,d){g.transaction(function(b){b.executeSql("SELECT name FROM sqlite_master WHERE type='table' AND name <> '__WebKitDatabaseInfoTable__'",[],function(b,c){for(var d=[],e=0;e<c.rows.length;e++)d.push(c.rows.item(e).name);a({db:g,storeNames:d})},function(c,a){d(a)})},function(b){d(b)})})}function F(){try{return"undefined"!=typeof localStorage&&"setItem"in localStorage&&!!localStorage.setItem}catch(b){return!1}}function G(d,a){var b=d.name+"/";return d.storeName!==a.storeName&&(b+=d.storeName+"/"),b}function H(){try{return localStorage.setItem("_localforage_support_test",!0),localStorage.removeItem("_localforage_support_test"),!1}catch(b){return!0}}function I(){return!H()||0<localStorage.length}function J(d,a){d[a]=function(){var b=arguments;return d.ready().then(function(){return d[a].apply(d,b)})}}function K(){for(var d,e=1;e<arguments.length;e++)if(d=arguments[e],d)for(var f in d)d.hasOwnProperty(f)&&(pa(d[f])?arguments[0][f]=d[f].slice():arguments[0][f]=d[f]);return arguments[0]}var L="function"==typeof Symbol&&"symbol"==_typeof(Symbol.iterator)?function(b){return"undefined"==typeof b?"undefined":_typeof(b)}:function(b){return b&&"function"==typeof Symbol&&b.constructor===Symbol&&b!==Symbol.prototype?"symbol":"undefined"==typeof b?"undefined":_typeof(b)},M=function(){try{if("undefined"!=typeof indexedDB)return indexedDB;if("undefined"!=typeof webkitIndexedDB)return webkitIndexedDB;if("undefined"!=typeof mozIndexedDB)return mozIndexedDB;if("undefined"!=typeof OIndexedDB)return OIndexedDB;if("undefined"!=typeof msIndexedDB)return msIndexedDB}catch(b){}}();"undefined"==typeof Promise&&c(3);var N=Promise,O="local-forage-detect-blob-support",P=void 0,Q={},R=Object.prototype.toString,S="readonly",T="readwrite",U={_driver:"asyncStorage",_initStorage:function(k){function a(){return N.resolve()}var l=this,c={db:null};if(k)for(var b in k)c[b]=k[b];var d=Q[c.name];d||(d=w(),Q[c.name]=d),d.forages.push(l),l._initReady||(l._initReady=l.ready,l.ready=t);for(var e,m=[],g=0;g<d.forages.length;g++)e=d.forages[g],e!==l&&m.push(e._initReady().catch(a));var q=d.forages.slice(0);return N.all(m).then(function(){return c.db=d.db,n(c)}).then(function(b){return c.db=b,p(c,l._defaultConfig.version)?o(c):b}).then(function(f){c.db=d.db=f,l._dbInfo=c;for(var a,g=0;g<q.length;g++)a=q[g],a!==l&&(a._dbInfo.db=c.db,a._dbInfo.version=c.version)})},_support:function(){try{if(!M)return!1;var c="undefined"!=typeof openDatabase&&/(Safari|iPhone|iPad|iPod)/.test(navigator.userAgent)&&!/Chrome/.test(navigator.userAgent)&&!/BlackBerry/.test(navigator.platform),a="function"==typeof fetch&&-1!==fetch.toString().indexOf("[native code");return(!c||a)&&"undefined"!=typeof indexedDB&&"undefined"!=typeof IDBKeyRange}catch(b){return!1}}(),iterate:function(f,a){var e=this,b=new N(function(a,b){e.ready().then(function(){v(e._dbInfo,S,function(c,d){if(c)return b(c);try{var j=d.objectStore(e._dbInfo.storeName),g=j.openCursor(),h=1;g.onsuccess=function(){var b=g.result;if(b){var c=b.value;s(c)&&(c=r(c));var i=f(c,b.key,h++);void 0===i?b.continue():a(i)}else a()},g.onerror=function(){b(g.error)}}catch(c){b(c)}})}).catch(b)});return C(b,a),b},getItem:function(e,f){var i=this;e=g(e);var b=new N(function(c,b){i.ready().then(function(){v(i._dbInfo,S,function(a,d){if(a)return b(a);try{var f=d.objectStore(i._dbInfo.storeName),g=f.get(e);g.onsuccess=function(){var b=g.result;void 0===b&&(b=null),s(b)&&(b=r(b)),c(b)},g.onerror=function(){b(g.error)}}catch(c){b(c)}})}).catch(b)});return C(b,f),b},setItem:function(f,h,b){var j=this;f=g(f);var c=new N(function(a,c){var b;j.ready().then(function(){return b=j._dbInfo,"[object Blob]"===R.call(h)?i(b.db).then(function(b){return b?h:q(h)}):h}).then(function(d){v(j._dbInfo,T,function(b,e){if(b)return c(b);try{var g=e.objectStore(j._dbInfo.storeName);null===d&&(d=void 0);var h=g.put(d,f);e.oncomplete=function(){void 0===d&&(d=null),a(d)},e.onabort=e.onerror=function(){var b=h.error?h.error:h.transaction.error;c(b)}}catch(b){c(b)}})}).catch(c)});return C(c,b),c},removeItem:function(e,f){var i=this;e=g(e);var b=new N(function(a,b){i.ready().then(function(){v(i._dbInfo,T,function(c,d){if(c)return b(c);try{var f=d.objectStore(i._dbInfo.storeName),g=f.delete(e);d.oncomplete=function(){a()},d.onerror=function(){b(g.error)},d.onabort=function(){var c=g.error?g.error:g.transaction.error;b(c)}}catch(c){b(c)}})}).catch(b)});return C(b,f),b},clear:function(d){var h=this,a=new N(function(b,i){h.ready().then(function(){v(h._dbInfo,T,function(a,c){if(a)return i(a);try{var d=c.objectStore(h._dbInfo.storeName),e=d.clear();c.oncomplete=function(){b()},c.onabort=c.onerror=function(){var b=e.error?e.error:e.transaction.error;i(b)}}catch(b){i(b)}})}).catch(i)});return C(a,d),a},length:function(d){var h=this,a=new N(function(b,i){h.ready().then(function(){v(h._dbInfo,S,function(a,c){if(a)return i(a);try{var d=c.objectStore(h._dbInfo.storeName),e=d.count();e.onsuccess=function(){b(e.result)},e.onerror=function(){i(e.error)}}catch(b){i(b)}})}).catch(i)});return C(a,d),a},key:function(e,a){var j=this,b=new N(function(a,b){return 0>e?void a(null):void j.ready().then(function(){v(j._dbInfo,S,function(c,d){if(c)return b(c);try{var f=d.objectStore(j._dbInfo.storeName),g=!1,k=f.openCursor();k.onsuccess=function(){var b=k.result;return b?void(0===e?a(b.key):g?a(b.key):(g=!0,b.advance(e))):void a(null)},k.onerror=function(){b(k.error)}}catch(c){b(c)}})}).catch(b)});return C(b,a),b},keys:function(d){var i=this,a=new N(function(d,b){i.ready().then(function(){v(i._dbInfo,S,function(a,c){if(a)return b(a);try{var e=c.objectStore(i._dbInfo.storeName),f=e.openCursor(),g=[];f.onsuccess=function(){var a=f.result;return a?void(g.push(a.key),a.continue()):void d(g)},f.onerror=function(){b(f.error)}}catch(c){b(c)}})}).catch(b)});return C(a,d),a},dropInstance:function(i,m){m=h.apply(this,arguments);var o=this.config();i="function"!=typeof i&&i||{},i.name||(i.name=i.name||o.name,i.storeName=i.storeName||o.storeName);var c,p=this;if(i.name){var e=i.name===o.name&&p._dbInfo.db,f=e?N.resolve(p._dbInfo.db):n(i).then(function(a){var b=Q[i.name],c=b.forages;b.db=a;for(var d=0;d<c.length;d++)c[d]._dbInfo.db=a;return a});c=i.storeName?f.then(function(a){if(a.objectStoreNames.contains(i.storeName)){var h=a.version+1;j(i);var m=Q[i.name],d=m.forages;a.close();for(var b,c=0;c<d.length;c++)b=d[c],b._dbInfo.db=null,b._dbInfo.version=h;return new N(function(c,b){var d=M.open(i.name,h);d.onerror=function(c){d.result.close(),b(c)},d.onupgradeneeded=function(){d.result.deleteObjectStore(i.storeName)},d.onsuccess=function(){var b=d.result;b.close(),c(b)}}).then(function(e){m.db=e;for(var a,f=0;f<d.length;f++)a=d[f],a._dbInfo.db=e,k(a._dbInfo)}).catch(function(a){throw(l(i,a)||N.resolve()).catch(function(){}),a})}}):f.then(function(a){j(i);var f=Q[i.name],c=f.forages;a.close();for(var b=0;b<c.length;b++)c[b]._dbInfo.db=null;return new N(function(e,f){var c=M.deleteDatabase(i.name);c.onerror=c.onblocked=function(d){var a=c.result;a&&a.close(),f(d)},c.onsuccess=function(){var b=c.result;b&&b.close(),e(b)}}).then(function(d){f.db=d;for(var a=0;a<c.length;a++)k(c[a]._dbInfo)}).catch(function(a){throw(l(i,a)||N.resolve()).catch(function(){}),a})})}else c=N.reject("Invalid arguments");return C(c,m),c}},V="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",W=/^~~local_forage_type~([^~]+)~/,X="__lfsc__:",Y="__lfsc__:".length,Z="arbf",$="blob",_="si08",aa="ui08",ba="uic8",ca="si16",da="si32",ea="ur16",fa="ui32",ga="fl32",ha="fl64",ia=9+"arbf".length,ja=Object.prototype.toString,ka={serialize:function(g,a){var b="";if(g&&(b=ja.call(g)),g&&("[object ArrayBuffer]"===b||g.buffer&&"[object ArrayBuffer]"===ja.call(g.buffer))){var h,i=X;g instanceof ArrayBuffer?(h=g,i+=Z):(h=g.buffer,"[object Int8Array]"===b?i+=_:"[object Uint8Array]"===b?i+=aa:"[object Uint8ClampedArray]"===b?i+=ba:"[object Int16Array]"===b?i+=ca:"[object Uint16Array]"===b?i+=ea:"[object Int32Array]"===b?i+=da:"[object Uint32Array]"===b?i+=fa:"[object Float32Array]"===b?i+=ga:"[object Float64Array]"===b?i+=ha:a(new Error("Failed to get type for BinaryArray"))),a(i+y(h))}else if("[object Blob]"===b){var j=new FileReader;j.onload=function(){var b="~~local_forage_type~"+g.type+"~"+y(this.result);a(X+$+b)},j.readAsArrayBuffer(g)}else try{a(JSON.stringify(g))}catch(b){console.error("Couldn't convert value into a JSON string: ",g),a(null,b)}},deserialize:function(g){if(g.substring(0,Y)!==X)return JSON.parse(g);var a,h=g.substring(ia),i=g.substring(Y,ia);if(i===$&&W.test(h)){var d=h.match(W);a=d[1],h=h.substring(d[0].length)}var j=x(h);switch(i){case Z:return j;case $:return e([j],{type:a});case _:return new Int8Array(j);case aa:return new Uint8Array(j);case ba:return new Uint8ClampedArray(j);case ca:return new Int16Array(j);case ea:return new Uint16Array(j);case da:return new Int32Array(j);case fa:return new Uint32Array(j);case ga:return new Float32Array(j);case ha:return new Float64Array(j);default:throw new Error("Unkown type: "+i);}},stringToBuffer:x,bufferToString:y},la={_driver:"webSQLStorage",_initStorage:function(f){var g=this,b={db:null};if(f)for(var a in f)b[a]="string"==typeof f[a]?f[a]:f[a].toString();var c=new N(function(c,e){try{b.db=openDatabase(b.name,b.version+"",b.description,b.size)}catch(b){return e(b)}b.db.transaction(function(a){z(a,b,function(){g._dbInfo=b,c()},function(c,a){e(a)})},e)});return b.serializer=ka,c},_support:function(){return"function"==typeof openDatabase}(),iterate:function(g,a){var f=this,b=new N(function(a,c){f.ready().then(function(){var b=f._dbInfo;b.db.transaction(function(d){A(d,b,"SELECT * FROM "+b.storeName,[],function(e,c){for(var d=c.rows,f=d.length,k=0;k<f;k++){var l=d.item(k),i=l.value;if(i&&(i=b.serializer.deserialize(i)),void 0!==(i=g(i,l.key,k+1)))return void a(i)}a()},function(d,a){c(a)})})}).catch(c)});return C(b,a),b},getItem:function(f,e){var h=this;f=g(f);var b=new N(function(g,c){h.ready().then(function(){var b=h._dbInfo;b.db.transaction(function(a){A(a,b,"SELECT * FROM "+b.storeName+" WHERE key = ? LIMIT 1",[f],function(e,a){var c=a.rows.length?a.rows.item(0).value:null;c&&(c=b.serializer.deserialize(c)),g(c)},function(d,a){c(a)})})}).catch(c)});return C(b,e),b},setItem:function(d,a,b){return B.apply(this,[d,a,b,1])},removeItem:function(f,e){var h=this;f=g(f);var b=new N(function(a,c){h.ready().then(function(){var b=h._dbInfo;b.db.transaction(function(d){A(d,b,"DELETE FROM "+b.storeName+" WHERE key = ?",[f],function(){a()},function(d,a){c(a)})})}).catch(c)});return C(b,e),b},clear:function(d){var e=this,a=new N(function(b,d){e.ready().then(function(){var a=e._dbInfo;a.db.transaction(function(c){A(c,a,"DELETE FROM "+a.storeName,[],function(){b()},function(c,a){d(a)})})}).catch(d)});return C(a,d),a},length:function(d){var e=this,a=new N(function(f,d){e.ready().then(function(){var a=e._dbInfo;a.db.transaction(function(c){A(c,a,"SELECT COUNT(key) as c FROM "+a.storeName,[],function(a,b){var c=b.rows.item(0).c;f(c)},function(c,a){d(a)})})}).catch(d)});return C(a,d),a},key:function(f,a){var g=this,b=new N(function(e,c){g.ready().then(function(){var a=g._dbInfo;a.db.transaction(function(b){A(b,a,"SELECT key FROM "+a.storeName+" WHERE id = ? LIMIT 1",[f+1],function(b,a){var c=a.rows.length?a.rows.item(0).key:null;e(c)},function(d,a){c(a)})})}).catch(c)});return C(b,a),b},keys:function(d){var e=this,a=new N(function(f,d){e.ready().then(function(){var a=e._dbInfo;a.db.transaction(function(c){A(c,a,"SELECT key FROM "+a.storeName,[],function(a,b){for(var c=[],d=0;d<b.rows.length;d++)c.push(b.rows.item(d).key);f(c)},function(c,a){d(a)})})}).catch(d)});return C(a,d),a},dropInstance:function(f,g){g=h.apply(this,arguments);var i=this.config();f="function"!=typeof f&&f||{},f.name||(f.name=f.name||i.name,f.storeName=f.storeName||i.storeName);var c,j=this;return c=f.name?new N(function(a){var b;b=f.name===i.name?j._dbInfo.db:openDatabase(f.name,"","",0),a(f.storeName?{db:b,storeNames:[f.storeName]}:E(b))}).then(function(d){return new N(function(a,b){d.db.transaction(function(i){function c(d){return new N(function(a,e){i.executeSql("DROP TABLE IF EXISTS "+d,[],function(){a()},function(c,a){e(a)})})}for(var e=[],f=0,j=d.storeNames.length;f<j;f++)e.push(c(d.storeNames[f]));N.all(e).then(function(){a()}).catch(function(c){b(c)})},function(c){b(c)})})}):N.reject("Invalid arguments"),C(c,g),c}},ma={_driver:"localStorageWrapper",_initStorage:function(e){var a=this,b={};if(e)for(var c in e)b[c]=e[c];return b.keyPrefix=G(e,a._defaultConfig),I()?(a._dbInfo=b,b.serializer=ka,N.resolve()):N.reject()},_support:F(),iterate:function(f,a){var k=this,b=k.ready().then(function(){for(var a,c=k._dbInfo,b=c.keyPrefix,d=b.length,e=localStorage.length,l=1,m=0;m<e;m++)if(a=localStorage.key(m),0===a.indexOf(b)){var n=localStorage.getItem(a);if(n&&(n=c.serializer.deserialize(n)),void 0!==(n=f(n,a.substring(d),l++)))return n}});return C(b,a),b},getItem:function(e,f){var h=this;e=g(e);var b=h.ready().then(function(){var a=h._dbInfo,b=localStorage.getItem(a.keyPrefix+e);return b&&(b=a.serializer.deserialize(b)),b});return C(b,f),b},setItem:function(f,h,i){var j=this;f=g(f);var c=j.ready().then(function(){void 0===h&&(h=null);var a=h;return new N(function(c,e){var d=j._dbInfo;d.serializer.serialize(h,function(g,b){if(b)e(b);else try{localStorage.setItem(d.keyPrefix+f,g),c(a)}catch(b){"QuotaExceededError"!==b.name&&"NS_ERROR_DOM_QUOTA_REACHED"!==b.name||e(b),e(b)}})})});return C(c,i),c},removeItem:function(e,f){var h=this;e=g(e);var b=h.ready().then(function(){var a=h._dbInfo;localStorage.removeItem(a.keyPrefix+e)});return C(b,f),b},clear:function(d){var e=this,a=e.ready().then(function(){for(var b,f=e._dbInfo.keyPrefix,a=localStorage.length-1;0<=a;a--)b=localStorage.key(a),0===b.indexOf(f)&&localStorage.removeItem(b)});return C(a,d),a},length:function(d){var a=this,b=a.keys().then(function(b){return b.length});return C(b,d),b},key:function(e,a){var f=this,b=f.ready().then(function(){var c,a=f._dbInfo;try{c=localStorage.key(e)}catch(b){c=null}return c&&(c=c.substring(a.keyPrefix.length)),c});return C(b,a),b},keys:function(d){var g=this,a=g.ready().then(function(){for(var b,h=g._dbInfo,a=localStorage.length,c=[],d=0;d<a;d++)b=localStorage.key(d),0===b.indexOf(h.keyPrefix)&&c.push(b.substring(h.keyPrefix.length));return c});return C(a,d),a},dropInstance:function(f,g){if(g=h.apply(this,arguments),f="function"!=typeof f&&f||{},!f.name){var i=this.config();f.name=f.name||i.name,f.storeName=f.storeName||i.storeName}var c,j=this;return c=f.name?new N(function(a){a(f.storeName?G(f,j._defaultConfig):f.name+"/")}).then(function(d){for(var a,e=localStorage.length-1;0<=e;e--)a=localStorage.key(e),0===a.indexOf(d)&&localStorage.removeItem(a)}):N.reject("Invalid arguments"),C(c,g),c}},na=function(c,a){return c===a||"number"==typeof c&&"number"==typeof a&&isNaN(c)&&isNaN(a)},oa=function(e,a){for(var b=e.length,c=0;c<b;){if(na(e[c],a))return!0;c++}return!1},pa=Array.isArray||function(b){return"[object Array]"===Object.prototype.toString.call(b)},qa={},ra={},sa={INDEXEDDB:U,WEBSQL:la,LOCALSTORAGE:ma},ta=[sa.INDEXEDDB._driver,sa.WEBSQL._driver,sa.LOCALSTORAGE._driver],ua=["dropInstance"],va=["clear","getItem","iterate","key","keys","length","removeItem","setItem"].concat(ua),wa={description:"",driver:ta.slice(),name:"localforage",size:4980736,storeName:"keyvaluepairs",version:1},ya=function(){function d(a){for(var g in b(this,d),sa)if(sa.hasOwnProperty(g)){var c=sa[g],e=c._driver;this[g]=e,qa[e]||this.defineDriver(c)}this._defaultConfig=K({},wa),this._config=K({},this._defaultConfig,a),this._driverSet=null,this._initDriver=null,this._ready=!1,this._dbInfo=null,this._wrapLibraryMethodsWithReady(),this.setDriver(this._config.driver).catch(function(){})}return d.prototype.config=function(c){if("object"===(void 0===c?"undefined":L(c))){if(this._ready)return new Error("Can't call config() after localforage has been used.");for(var a in c){if("storeName"==a&&(c[a]=c[a].replace(/\W/g,"_")),"version"==a&&"number"!=typeof c[a])return new Error("Database version must be a number.");this._config[a]=c[a]}return!("driver"in c&&c.driver)||this.setDriver(this._config.driver)}return"string"==typeof c?this._config[c]:this._config},d.prototype.defineDriver=function(h,a,b){var c=new N(function(a,b){try{var l=h._driver,c=new Error("Custom driver not compliant; see https://mozilla.github.io/localForage/#definedriver");if(!h._driver)return void b(c);for(var d,e=va.concat("_initStorage"),f=0,m=e.length;f<m;f++)if(d=e[f],(!oa(ua,d)||h[d])&&"function"!=typeof h[d])return void b(c);(function(){for(var a,f=function(d){return function(){var a=new Error("Method "+d+" is not implemented by the current driver"),b=N.reject(a);return C(b,arguments[arguments.length-1]),b}},b=0,g=ua.length;b<g;b++)a=ua[b],h[a]||(h[a]=f(a))})();var i=function(b){qa[l]&&console.info("Redefining LocalForage driver: "+l),qa[l]=h,ra[l]=b,a()};"_support"in h?h._support&&"function"==typeof h._support?h._support().then(i,b):i(!!h._support):i(!0)}catch(c){b(c)}});return D(c,a,b),c},d.prototype.driver=function(){return this._driver||null},d.prototype.getDriver=function(e,a,b){var c=qa[e]?N.resolve(qa[e]):N.reject(new Error("Driver not found."));return D(c,a,b),c},d.prototype.getSerializer=function(c){var a=N.resolve(ka);return D(a,c),a},d.prototype.ready=function(d){var a=this,b=a._driverSet.then(function(){return null===a._ready&&(a._ready=a._initDriver()),a._ready});return D(b,d,d),b},d.prototype.setDriver=function(i,k,b){function l(){e._config.driver=e.driver()}function d(b){return e._extend(b),l(),e._ready=e._initStorage(e._config),e._ready}function c(g){return function(){function a(){for(;b<g.length;){var c=g[b];return b++,e._dbInfo=null,e._ready=null,e.getDriver(c).then(d).catch(a)}l();var f=new Error("No available storage method found.");return e._driverSet=N.reject(f),e._driverSet}var b=0;return a()}}var e=this;pa(i)||(i=[i]);var f=this._getSupportedDrivers(i),g=null===this._driverSet?N.resolve():this._driverSet.catch(function(){return N.resolve()});return this._driverSet=g.then(function(){var b=f[0];return e._dbInfo=null,e._ready=null,e.getDriver(b).then(function(b){e._driver=b._driver,l(),e._wrapLibraryMethodsWithReady(),e._initDriver=c(f)})}).catch(function(){l();var b=new Error("No available storage method found.");return e._driverSet=N.reject(b),e._driverSet}),D(this._driverSet,k,b),this._driverSet},d.prototype.supports=function(b){return!!ra[b]},d.prototype._extend=function(b){K(this,b)},d.prototype._getSupportedDrivers=function(f){for(var a,g=[],b=0,h=f.length;b<h;b++)a=f[b],this.supports(a)&&g.push(a);return g},d.prototype._wrapLibraryMethodsWithReady=function(){for(var c=0,d=va.length;c<d;c++)J(this,va[c])},d.prototype.createInstance=function(a){return new d(a)},d}(),za=new ya;a.exports=za},{3:3}]},{},[4])(4)});var map,EmptyStorageError=function(a){function b(){return _classCallCheck(this,b),_possibleConstructorReturn(this,(b.__proto__||Object.getPrototypeOf(b)).apply(this,arguments))}return _inherits(b,a),b}(Error),DBHelper=function(){function a(){_classCallCheck(this,a)}return _createClass(a,null,[{key:"fetchNewData",value:function(){return fetch(a.DATABASE_URL).then(function(a){return a.json()})}},{key:"putData",value:function(a){return localforage.clear().then(function(){var b=a.map(function(a){return localforage.setItem(a.id,a)});return Promise.all(b)})}},{key:"isEmpty",value:function(){return localforage.length().then(function(a){return 0===a})}},{key:"updateData",value:function(){return fetch(a.DATABASE_URL).then(function(a){return a.json()}).then(function(a){return localforage.clear().then(function(){return a})}).then(function(a){var b=a.map(function(a){return localforage.setItem(a.id,a)});return Promise.all(b)})}},{key:"fetchRestaurants",value:function(){return localforage.keys().then(function(a){if(0===a.length)throw new EmptyStorageError;var b=a.map(function(a){return localforage.getItem(a)});return Promise.all(b)})}},{key:"fetchRestaurantById",value:function(a){return localforage.getItem(a)}},{key:"fetchRestaurantByCuisine",value:function(b){return a.fetchRestaurants().then(function(){return restaurants.filter(function(a){return a.cuisine_type==b})})}},{key:"fetchRestaurantByNeighborhood",value:function(b){return a.fetchRestaurants().then(function(){return restaurants.filter(function(a){return a.neighborhood==b})})}},{key:"fetchRestaurantByCuisineAndNeighborhood",value:function(b,c){return a.fetchRestaurants().then(function(a){return"all"==b?"all"==c?a:a.filter(function(a){return a.neighborhood==c}):a.filter(function(a){return a.cuisine_type==b})})}},{key:"fetchNeighborhoods",value:function(){return a.fetchRestaurants().then(function(a){return a.map(function(b,c){return a[c].neighborhood}).filter(function(a,b,c){return c.indexOf(a)==b})})}},{key:"fetchCuisines",value:function(){return a.fetchRestaurants().then(function(a){return a.map(function(b,c){return a[c].cuisine_type}).filter(function(a,b,c){return c.indexOf(a)==b})})}},{key:"urlForRestaurant",value:function(a){return"./restaurant.html?id="+a.id}},{key:"imageUrlForRestaurant",value:function(a){return"/img/"+a.photograph}},{key:"mapMarkerForRestaurant",value:function(b,c){var d=new google.maps.Marker({position:b.latlng,title:b.name,url:a.urlForRestaurant(b),map:c,animation:google.maps.Animation.DROP});return d}},{key:"DATABASE_URL",get:function(){return"http://localhost:1337/restaurants"}}]),a}(),restaurant=void 0;window.initMap=function(){registerServiceWorker(),fetchRestaurantFromURL().then(function(a){self.map=new google.maps.Map(document.getElementById("map"),{zoom:16,center:a.latlng,scrollwheel:!1}),fillBreadcrumb(),DBHelper.mapMarkerForRestaurant(self.restaurant,self.map)}).catch(console.error)};var registerServiceWorker=function(){"serviceWorker"in navigator&&navigator.serviceWorker.register("./sw.js",{scope:"./"})},fetchRestaurantFromURL=function(){if(self.restaurant)return Promise.resolve(self.restaurant);var a=getParameterByName("id");return a?DBHelper.fetchRestaurantById(a).then(function(a){return self.restaurant=a,fillRestaurantHTML(),a}):Promise.reject("No restaurant id in URL")},fillRestaurantHTML=function(){var a=0<arguments.length&&arguments[0]!==void 0?arguments[0]:self.restaurant,b=document.getElementById("restaurant-name");b.innerHTML=a.name;var c=document.getElementById("restaurant-address");c.innerHTML=a.address;var d=document.getElementById("restaurant-img");d.className="restaurant-img",d.alt="Photo of the "+a.name+" restaurant";var e=DBHelper.imageUrlForRestaurant(a);d.src=e+"-480.jpg",d.srcset=e+"-480.jpg 1x, "+e+"-800.jpg 2x";var f=document.getElementById("restaurant-cuisine");f.innerHTML=a.cuisine_type,a.operating_hours&&fillRestaurantHoursHTML(),fillReviewsHTML()},fillRestaurantHoursHTML=function(){var a=0<arguments.length&&arguments[0]!==void 0?arguments[0]:self.restaurant.operating_hours,b=document.getElementById("restaurant-hours"),c=b.querySelector("tbody");for(var d in a){var e=document.createElement("tr"),f=document.createElement("th");f.classList.add("left"),f.innerHTML=d,e.appendChild(f);var g=document.createElement("td");g.classList.add("right");var h=document.createElement("span");h.innerHTML=a[d],g.appendChild(h),e.appendChild(g),c.appendChild(e)}},fillReviewsHTML=function(){var a=0<arguments.length&&arguments[0]!==void 0?arguments[0]:self.restaurant.reviews,b=document.getElementById("reviews-container");if(!a){var c=document.createElement("p");return c.innerHTML="No reviews yet!",void b.appendChild(c)}var d=document.getElementById("reviews-list");a.forEach(function(a){d.appendChild(createReviewHTML(a))}),b.appendChild(d)},createReviewHTML=function(a){var b=document.createElement("li");b.classList.add("card");var c=document.createElement("span");c.classList.add("username"),c.innerHTML=a.name,b.appendChild(c);var d=document.createElement("span");d.classList.add("date"),d.innerHTML=a.date,b.appendChild(d);var e=document.createElement("p");e.classList.add("rating"),e.innerHTML="\u2605".repeat(a.rating),b.appendChild(e);var f=document.createElement("p");return f.classList.add("comments"),f.innerHTML=a.comments,b.appendChild(f),b},fillBreadcrumb=function(){var a=0<arguments.length&&arguments[0]!==void 0?arguments[0]:self.restaurant,b=document.getElementById("breadcrumb"),c=document.createElement("li");c.innerHTML=a.name,c.setAttribute("aria-current","page"),b.appendChild(c)},getParameterByName=function(a,b){b||(b=window.location.href),a=a.replace(/[\[\]]/g,"\\$&");var c=new RegExp("[?&]"+a+"(=([^&#]*)|&|#|$)"),d=c.exec(b);return d?d[2]?decodeURIComponent(d[2].replace(/\+/g," ")):"":null};
+/*!
+    localForage -- Offline Storage, Improved
+    Version 1.7.1
+    https://localforage.github.io/localForage
+    (c) 2013-2017 Mozilla, Apache License 2.0
+*/
+!function(a){if("object"==typeof exports&&"undefined"!=typeof module)module.exports=a();else if("function"==typeof define&&define.amd)define([],a);else{var b;b="undefined"!=typeof window?window:"undefined"!=typeof global?global:"undefined"!=typeof self?self:this,b.localforage=a()}}(function(){return function a(b,c,d){function e(g,h){if(!c[g]){if(!b[g]){var i="function"==typeof require&&require;if(!h&&i)return i(g,!0);if(f)return f(g,!0);var j=new Error("Cannot find module '"+g+"'");throw j.code="MODULE_NOT_FOUND",j}var k=c[g]={exports:{}};b[g][0].call(k.exports,function(a){var c=b[g][1][a];return e(c||a)},k,k.exports,a,b,c,d)}return c[g].exports}for(var f="function"==typeof require&&require,g=0;g<d.length;g++)e(d[g]);return e}({1:[function(a,b,c){(function(a){"use strict";function c(){k=!0;for(var a,b,c=l.length;c;){for(b=l,l=[],a=-1;++a<c;)b[a]();c=l.length}k=!1}function d(a){1!==l.push(a)||k||e()}var e,f=a.MutationObserver||a.WebKitMutationObserver;if(f){var g=0,h=new f(c),i=a.document.createTextNode("");h.observe(i,{characterData:!0}),e=function(){i.data=g=++g%2}}else if(a.setImmediate||void 0===a.MessageChannel)e="document"in a&&"onreadystatechange"in a.document.createElement("script")?function(){var b=a.document.createElement("script");b.onreadystatechange=function(){c(),b.onreadystatechange=null,b.parentNode.removeChild(b),b=null},a.document.documentElement.appendChild(b)}:function(){setTimeout(c,0)};else{var j=new a.MessageChannel;j.port1.onmessage=c,e=function(){j.port2.postMessage(0)}}var k,l=[];b.exports=d}).call(this,"undefined"!=typeof global?global:"undefined"!=typeof self?self:"undefined"!=typeof window?window:{})},{}],2:[function(a,b,c){"use strict";function d(){}function e(a){if("function"!=typeof a)throw new TypeError("resolver must be a function");this.state=s,this.queue=[],this.outcome=void 0,a!==d&&i(this,a)}function f(a,b,c){this.promise=a,"function"==typeof b&&(this.onFulfilled=b,this.callFulfilled=this.otherCallFulfilled),"function"==typeof c&&(this.onRejected=c,this.callRejected=this.otherCallRejected)}function g(a,b,c){o(function(){var d;try{d=b(c)}catch(b){return p.reject(a,b)}d===a?p.reject(a,new TypeError("Cannot resolve promise with itself")):p.resolve(a,d)})}function h(a){var b=a&&a.then;if(a&&"object"==typeof a&&"function"==typeof b)return function(){b.apply(a,arguments)}}function i(a,b){function c(b){f||(f=!0,p.reject(a,b))}function d(b){f||(f=!0,p.resolve(a,b))}function e(){b(d,c)}var f=!1,g=j(e);"error"===g.status&&c(g.value)}function j(a,b){var c={};try{c.value=a(b),c.status="success"}catch(a){c.status="error",c.value=a}return c}function k(a){return a instanceof this?a:p.resolve(new this(d),a)}function l(a){var b=new this(d);return p.reject(b,a)}function m(a){function b(a,b){function d(a){g[b]=a,++h!==e||f||(f=!0,p.resolve(j,g))}c.resolve(a).then(d,function(a){f||(f=!0,p.reject(j,a))})}var c=this;if("[object Array]"!==Object.prototype.toString.call(a))return this.reject(new TypeError("must be an array"));var e=a.length,f=!1;if(!e)return this.resolve([]);for(var g=new Array(e),h=0,i=-1,j=new this(d);++i<e;)b(a[i],i);return j}function n(a){function b(a){c.resolve(a).then(function(a){f||(f=!0,p.resolve(h,a))},function(a){f||(f=!0,p.reject(h,a))})}var c=this;if("[object Array]"!==Object.prototype.toString.call(a))return this.reject(new TypeError("must be an array"));var e=a.length,f=!1;if(!e)return this.resolve([]);for(var g=-1,h=new this(d);++g<e;)b(a[g]);return h}var o=a(1),p={},q=["REJECTED"],r=["FULFILLED"],s=["PENDING"];b.exports=c=e,e.prototype.catch=function(a){return this.then(null,a)},e.prototype.then=function(a,b){if("function"!=typeof a&&this.state===r||"function"!=typeof b&&this.state===q)return this;var c=new this.constructor(d);if(this.state!==s){g(c,this.state===r?a:b,this.outcome)}else this.queue.push(new f(c,a,b));return c},f.prototype.callFulfilled=function(a){p.resolve(this.promise,a)},f.prototype.otherCallFulfilled=function(a){g(this.promise,this.onFulfilled,a)},f.prototype.callRejected=function(a){p.reject(this.promise,a)},f.prototype.otherCallRejected=function(a){g(this.promise,this.onRejected,a)},p.resolve=function(a,b){var c=j(h,b);if("error"===c.status)return p.reject(a,c.value);var d=c.value;if(d)i(a,d);else{a.state=r,a.outcome=b;for(var e=-1,f=a.queue.length;++e<f;)a.queue[e].callFulfilled(b)}return a},p.reject=function(a,b){a.state=q,a.outcome=b;for(var c=-1,d=a.queue.length;++c<d;)a.queue[c].callRejected(b);return a},c.resolve=k,c.reject=l,c.all=m,c.race=n},{1:1}],3:[function(a,b,c){(function(b){"use strict";"function"!=typeof b.Promise&&(b.Promise=a(2))}).call(this,"undefined"!=typeof global?global:"undefined"!=typeof self?self:"undefined"!=typeof window?window:{})},{2:2}],4:[function(a,b,c){"use strict";function d(a,b){if(!(a instanceof b))throw new TypeError("Cannot call a class as a function")}function e(){try{if("undefined"!=typeof indexedDB)return indexedDB;if("undefined"!=typeof webkitIndexedDB)return webkitIndexedDB;if("undefined"!=typeof mozIndexedDB)return mozIndexedDB;if("undefined"!=typeof OIndexedDB)return OIndexedDB;if("undefined"!=typeof msIndexedDB)return msIndexedDB}catch(a){return}}function f(){try{if(!ua)return!1;var a="undefined"!=typeof openDatabase&&/(Safari|iPhone|iPad|iPod)/.test(navigator.userAgent)&&!/Chrome/.test(navigator.userAgent)&&!/BlackBerry/.test(navigator.platform),b="function"==typeof fetch&&-1!==fetch.toString().indexOf("[native code");return(!a||b)&&"undefined"!=typeof indexedDB&&"undefined"!=typeof IDBKeyRange}catch(a){return!1}}function g(a,b){a=a||[],b=b||{};try{return new Blob(a,b)}catch(f){if("TypeError"!==f.name)throw f;for(var c="undefined"!=typeof BlobBuilder?BlobBuilder:"undefined"!=typeof MSBlobBuilder?MSBlobBuilder:"undefined"!=typeof MozBlobBuilder?MozBlobBuilder:WebKitBlobBuilder,d=new c,e=0;e<a.length;e+=1)d.append(a[e]);return d.getBlob(b.type)}}function h(a,b){b&&a.then(function(a){b(null,a)},function(a){b(a)})}function i(a,b,c){"function"==typeof b&&a.then(b),"function"==typeof c&&a.catch(c)}function j(a){return"string"!=typeof a&&(console.warn(a+" used as a key, but it is not a string."),a=String(a)),a}function k(){if(arguments.length&&"function"==typeof arguments[arguments.length-1])return arguments[arguments.length-1]}function l(a){for(var b=a.length,c=new ArrayBuffer(b),d=new Uint8Array(c),e=0;e<b;e++)d[e]=a.charCodeAt(e);return c}function m(a){return new va(function(b){var c=a.transaction(wa,Ba),d=g([""]);c.objectStore(wa).put(d,"key"),c.onabort=function(a){a.preventDefault(),a.stopPropagation(),b(!1)},c.oncomplete=function(){var a=navigator.userAgent.match(/Chrome\/(\d+)/),c=navigator.userAgent.match(/Edge\//);b(c||!a||parseInt(a[1],10)>=43)}}).catch(function(){return!1})}function n(a){return"boolean"==typeof xa?va.resolve(xa):m(a).then(function(a){return xa=a})}function o(a){var b=ya[a.name],c={};c.promise=new va(function(a,b){c.resolve=a,c.reject=b}),b.deferredOperations.push(c),b.dbReady?b.dbReady=b.dbReady.then(function(){return c.promise}):b.dbReady=c.promise}function p(a){var b=ya[a.name],c=b.deferredOperations.pop();if(c)return c.resolve(),c.promise}function q(a,b){var c=ya[a.name],d=c.deferredOperations.pop();if(d)return d.reject(b),d.promise}function r(a,b){return new va(function(c,d){if(ya[a.name]=ya[a.name]||B(),a.db){if(!b)return c(a.db);o(a),a.db.close()}var e=[a.name];b&&e.push(a.version);var f=ua.open.apply(ua,e);b&&(f.onupgradeneeded=function(b){var c=f.result;try{c.createObjectStore(a.storeName),b.oldVersion<=1&&c.createObjectStore(wa)}catch(c){if("ConstraintError"!==c.name)throw c;console.warn('The database "'+a.name+'" has been upgraded from version '+b.oldVersion+" to version "+b.newVersion+', but the storage "'+a.storeName+'" already exists.')}}),f.onerror=function(a){a.preventDefault(),d(f.error)},f.onsuccess=function(){c(f.result),p(a)}})}function s(a){return r(a,!1)}function t(a){return r(a,!0)}function u(a,b){if(!a.db)return!0;var c=!a.db.objectStoreNames.contains(a.storeName),d=a.version<a.db.version,e=a.version>a.db.version;if(d&&(a.version!==b&&console.warn('The database "'+a.name+"\" can't be downgraded from version "+a.db.version+" to version "+a.version+"."),a.version=a.db.version),e||c){if(c){var f=a.db.version+1;f>a.version&&(a.version=f)}return!0}return!1}function v(a){return new va(function(b,c){var d=new FileReader;d.onerror=c,d.onloadend=function(c){var d=btoa(c.target.result||"");b({__local_forage_encoded_blob:!0,data:d,type:a.type})},d.readAsBinaryString(a)})}function w(a){return g([l(atob(a.data))],{type:a.type})}function x(a){return a&&a.__local_forage_encoded_blob}function y(a){var b=this,c=b._initReady().then(function(){var a=ya[b._dbInfo.name];if(a&&a.dbReady)return a.dbReady});return i(c,a,a),c}function z(a){o(a);for(var b=ya[a.name],c=b.forages,d=0;d<c.length;d++){var e=c[d];e._dbInfo.db&&(e._dbInfo.db.close(),e._dbInfo.db=null)}return a.db=null,s(a).then(function(b){return a.db=b,u(a)?t(a):b}).then(function(d){a.db=b.db=d;for(var e=0;e<c.length;e++)c[e]._dbInfo.db=d}).catch(function(b){throw q(a,b),b})}function A(a,b,c,d){void 0===d&&(d=1);try{var e=a.db.transaction(a.storeName,b);c(null,e)}catch(e){if(d>0&&(!a.db||"InvalidStateError"===e.name||"NotFoundError"===e.name))return va.resolve().then(function(){if(!a.db||"NotFoundError"===e.name&&!a.db.objectStoreNames.contains(a.storeName)&&a.version<=a.db.version)return a.db&&(a.version=a.db.version+1),t(a)}).then(function(){return z(a).then(function(){A(a,b,c,d-1)})}).catch(c);c(e)}}function B(){return{forages:[],db:null,dbReady:null,deferredOperations:[]}}function C(a){function b(){return va.resolve()}var c=this,d={db:null};if(a)for(var e in a)d[e]=a[e];var f=ya[d.name];f||(f=B(),ya[d.name]=f),f.forages.push(c),c._initReady||(c._initReady=c.ready,c.ready=y);for(var g=[],h=0;h<f.forages.length;h++){var i=f.forages[h];i!==c&&g.push(i._initReady().catch(b))}var j=f.forages.slice(0);return va.all(g).then(function(){return d.db=f.db,s(d)}).then(function(a){return d.db=a,u(d,c._defaultConfig.version)?t(d):a}).then(function(a){d.db=f.db=a,c._dbInfo=d;for(var b=0;b<j.length;b++){var e=j[b];e!==c&&(e._dbInfo.db=d.db,e._dbInfo.version=d.version)}})}function D(a,b){var c=this;a=j(a);var d=new va(function(b,d){c.ready().then(function(){A(c._dbInfo,Aa,function(e,f){if(e)return d(e);try{var g=f.objectStore(c._dbInfo.storeName),h=g.get(a);h.onsuccess=function(){var a=h.result;void 0===a&&(a=null),x(a)&&(a=w(a)),b(a)},h.onerror=function(){d(h.error)}}catch(a){d(a)}})}).catch(d)});return h(d,b),d}function E(a,b){var c=this,d=new va(function(b,d){c.ready().then(function(){A(c._dbInfo,Aa,function(e,f){if(e)return d(e);try{var g=f.objectStore(c._dbInfo.storeName),h=g.openCursor(),i=1;h.onsuccess=function(){var c=h.result;if(c){var d=c.value;x(d)&&(d=w(d));var e=a(d,c.key,i++);void 0!==e?b(e):c.continue()}else b()},h.onerror=function(){d(h.error)}}catch(a){d(a)}})}).catch(d)});return h(d,b),d}function F(a,b,c){var d=this;a=j(a);var e=new va(function(c,e){var f;d.ready().then(function(){return f=d._dbInfo,"[object Blob]"===za.call(b)?n(f.db).then(function(a){return a?b:v(b)}):b}).then(function(b){A(d._dbInfo,Ba,function(f,g){if(f)return e(f);try{var h=g.objectStore(d._dbInfo.storeName);null===b&&(b=void 0);var i=h.put(b,a);g.oncomplete=function(){void 0===b&&(b=null),c(b)},g.onabort=g.onerror=function(){var a=i.error?i.error:i.transaction.error;e(a)}}catch(a){e(a)}})}).catch(e)});return h(e,c),e}function G(a,b){var c=this;a=j(a);var d=new va(function(b,d){c.ready().then(function(){A(c._dbInfo,Ba,function(e,f){if(e)return d(e);try{var g=f.objectStore(c._dbInfo.storeName),h=g.delete(a);f.oncomplete=function(){b()},f.onerror=function(){d(h.error)},f.onabort=function(){var a=h.error?h.error:h.transaction.error;d(a)}}catch(a){d(a)}})}).catch(d)});return h(d,b),d}function H(a){var b=this,c=new va(function(a,c){b.ready().then(function(){A(b._dbInfo,Ba,function(d,e){if(d)return c(d);try{var f=e.objectStore(b._dbInfo.storeName),g=f.clear();e.oncomplete=function(){a()},e.onabort=e.onerror=function(){var a=g.error?g.error:g.transaction.error;c(a)}}catch(a){c(a)}})}).catch(c)});return h(c,a),c}function I(a){var b=this,c=new va(function(a,c){b.ready().then(function(){A(b._dbInfo,Aa,function(d,e){if(d)return c(d);try{var f=e.objectStore(b._dbInfo.storeName),g=f.count();g.onsuccess=function(){a(g.result)},g.onerror=function(){c(g.error)}}catch(a){c(a)}})}).catch(c)});return h(c,a),c}function J(a,b){var c=this,d=new va(function(b,d){if(a<0)return void b(null);c.ready().then(function(){A(c._dbInfo,Aa,function(e,f){if(e)return d(e);try{var g=f.objectStore(c._dbInfo.storeName),h=!1,i=g.openCursor();i.onsuccess=function(){var c=i.result;if(!c)return void b(null);0===a?b(c.key):h?b(c.key):(h=!0,c.advance(a))},i.onerror=function(){d(i.error)}}catch(a){d(a)}})}).catch(d)});return h(d,b),d}function K(a){var b=this,c=new va(function(a,c){b.ready().then(function(){A(b._dbInfo,Aa,function(d,e){if(d)return c(d);try{var f=e.objectStore(b._dbInfo.storeName),g=f.openCursor(),h=[];g.onsuccess=function(){var b=g.result;if(!b)return void a(h);h.push(b.key),b.continue()},g.onerror=function(){c(g.error)}}catch(a){c(a)}})}).catch(c)});return h(c,a),c}function L(a,b){b=k.apply(this,arguments);var c=this.config();a="function"!=typeof a&&a||{},a.name||(a.name=a.name||c.name,a.storeName=a.storeName||c.storeName);var d,e=this;if(a.name){var f=a.name===c.name&&e._dbInfo.db,g=f?va.resolve(e._dbInfo.db):s(a).then(function(b){var c=ya[a.name],d=c.forages;c.db=b;for(var e=0;e<d.length;e++)d[e]._dbInfo.db=b;return b});d=a.storeName?g.then(function(b){if(b.objectStoreNames.contains(a.storeName)){var c=b.version+1;o(a);var d=ya[a.name],e=d.forages;b.close();for(var f=0;f<e.length;f++){var g=e[f];g._dbInfo.db=null,g._dbInfo.version=c}return new va(function(b,d){var e=ua.open(a.name,c);e.onerror=function(a){e.result.close(),d(a)},e.onupgradeneeded=function(){e.result.deleteObjectStore(a.storeName)},e.onsuccess=function(){var a=e.result;a.close(),b(a)}}).then(function(a){d.db=a;for(var b=0;b<e.length;b++){var c=e[b];c._dbInfo.db=a,p(c._dbInfo)}}).catch(function(b){throw(q(a,b)||va.resolve()).catch(function(){}),b})}}):g.then(function(b){o(a);var c=ya[a.name],d=c.forages;b.close();for(var e=0;e<d.length;e++){d[e]._dbInfo.db=null}return new va(function(b,c){var d=ua.deleteDatabase(a.name);d.onerror=d.onblocked=function(a){var b=d.result;b&&b.close(),c(a)},d.onsuccess=function(){var a=d.result;a&&a.close(),b(a)}}).then(function(a){c.db=a;for(var b=0;b<d.length;b++)p(d[b]._dbInfo)}).catch(function(b){throw(q(a,b)||va.resolve()).catch(function(){}),b})})}else d=va.reject("Invalid arguments");return h(d,b),d}function M(){return"function"==typeof openDatabase}function N(a){var b,c,d,e,f,g=.75*a.length,h=a.length,i=0;"="===a[a.length-1]&&(g--,"="===a[a.length-2]&&g--);var j=new ArrayBuffer(g),k=new Uint8Array(j);for(b=0;b<h;b+=4)c=Da.indexOf(a[b]),d=Da.indexOf(a[b+1]),e=Da.indexOf(a[b+2]),f=Da.indexOf(a[b+3]),k[i++]=c<<2|d>>4,k[i++]=(15&d)<<4|e>>2,k[i++]=(3&e)<<6|63&f;return j}function O(a){var b,c=new Uint8Array(a),d="";for(b=0;b<c.length;b+=3)d+=Da[c[b]>>2],d+=Da[(3&c[b])<<4|c[b+1]>>4],d+=Da[(15&c[b+1])<<2|c[b+2]>>6],d+=Da[63&c[b+2]];return c.length%3==2?d=d.substring(0,d.length-1)+"=":c.length%3==1&&(d=d.substring(0,d.length-2)+"=="),d}function P(a,b){var c="";if(a&&(c=Ua.call(a)),a&&("[object ArrayBuffer]"===c||a.buffer&&"[object ArrayBuffer]"===Ua.call(a.buffer))){var d,e=Ga;a instanceof ArrayBuffer?(d=a,e+=Ia):(d=a.buffer,"[object Int8Array]"===c?e+=Ka:"[object Uint8Array]"===c?e+=La:"[object Uint8ClampedArray]"===c?e+=Ma:"[object Int16Array]"===c?e+=Na:"[object Uint16Array]"===c?e+=Pa:"[object Int32Array]"===c?e+=Oa:"[object Uint32Array]"===c?e+=Qa:"[object Float32Array]"===c?e+=Ra:"[object Float64Array]"===c?e+=Sa:b(new Error("Failed to get type for BinaryArray"))),b(e+O(d))}else if("[object Blob]"===c){var f=new FileReader;f.onload=function(){var c=Ea+a.type+"~"+O(this.result);b(Ga+Ja+c)},f.readAsArrayBuffer(a)}else try{b(JSON.stringify(a))}catch(c){console.error("Couldn't convert value into a JSON string: ",a),b(null,c)}}function Q(a){if(a.substring(0,Ha)!==Ga)return JSON.parse(a);var b,c=a.substring(Ta),d=a.substring(Ha,Ta);if(d===Ja&&Fa.test(c)){var e=c.match(Fa);b=e[1],c=c.substring(e[0].length)}var f=N(c);switch(d){case Ia:return f;case Ja:return g([f],{type:b});case Ka:return new Int8Array(f);case La:return new Uint8Array(f);case Ma:return new Uint8ClampedArray(f);case Na:return new Int16Array(f);case Pa:return new Uint16Array(f);case Oa:return new Int32Array(f);case Qa:return new Uint32Array(f);case Ra:return new Float32Array(f);case Sa:return new Float64Array(f);default:throw new Error("Unkown type: "+d)}}function R(a,b,c,d){a.executeSql("CREATE TABLE IF NOT EXISTS "+b.storeName+" (id INTEGER PRIMARY KEY, key unique, value)",[],c,d)}function S(a){var b=this,c={db:null};if(a)for(var d in a)c[d]="string"!=typeof a[d]?a[d].toString():a[d];var e=new va(function(a,d){try{c.db=openDatabase(c.name,String(c.version),c.description,c.size)}catch(a){return d(a)}c.db.transaction(function(e){R(e,c,function(){b._dbInfo=c,a()},function(a,b){d(b)})},d)});return c.serializer=Va,e}function T(a,b,c,d,e,f){a.executeSql(c,d,e,function(a,g){g.code===g.SYNTAX_ERR?a.executeSql("SELECT name FROM sqlite_master WHERE type='table' AND name = ?",[name],function(a,h){h.rows.length?f(a,g):R(a,b,function(){a.executeSql(c,d,e,f)},f)},f):f(a,g)},f)}function U(a,b){var c=this;a=j(a);var d=new va(function(b,d){c.ready().then(function(){var e=c._dbInfo;e.db.transaction(function(c){T(c,e,"SELECT * FROM "+e.storeName+" WHERE key = ? LIMIT 1",[a],function(a,c){var d=c.rows.length?c.rows.item(0).value:null;d&&(d=e.serializer.deserialize(d)),b(d)},function(a,b){d(b)})})}).catch(d)});return h(d,b),d}function V(a,b){var c=this,d=new va(function(b,d){c.ready().then(function(){var e=c._dbInfo;e.db.transaction(function(c){T(c,e,"SELECT * FROM "+e.storeName,[],function(c,d){for(var f=d.rows,g=f.length,h=0;h<g;h++){var i=f.item(h),j=i.value;if(j&&(j=e.serializer.deserialize(j)),void 0!==(j=a(j,i.key,h+1)))return void b(j)}b()},function(a,b){d(b)})})}).catch(d)});return h(d,b),d}function W(a,b,c,d){var e=this;a=j(a);var f=new va(function(f,g){e.ready().then(function(){void 0===b&&(b=null);var h=b,i=e._dbInfo;i.serializer.serialize(b,function(b,j){j?g(j):i.db.transaction(function(c){T(c,i,"INSERT OR REPLACE INTO "+i.storeName+" (key, value) VALUES (?, ?)",[a,b],function(){f(h)},function(a,b){g(b)})},function(b){if(b.code===b.QUOTA_ERR){if(d>0)return void f(W.apply(e,[a,h,c,d-1]));g(b)}})})}).catch(g)});return h(f,c),f}function X(a,b,c){return W.apply(this,[a,b,c,1])}function Y(a,b){var c=this;a=j(a);var d=new va(function(b,d){c.ready().then(function(){var e=c._dbInfo;e.db.transaction(function(c){T(c,e,"DELETE FROM "+e.storeName+" WHERE key = ?",[a],function(){b()},function(a,b){d(b)})})}).catch(d)});return h(d,b),d}function Z(a){var b=this,c=new va(function(a,c){b.ready().then(function(){var d=b._dbInfo;d.db.transaction(function(b){T(b,d,"DELETE FROM "+d.storeName,[],function(){a()},function(a,b){c(b)})})}).catch(c)});return h(c,a),c}function $(a){var b=this,c=new va(function(a,c){b.ready().then(function(){var d=b._dbInfo;d.db.transaction(function(b){T(b,d,"SELECT COUNT(key) as c FROM "+d.storeName,[],function(b,c){var d=c.rows.item(0).c;a(d)},function(a,b){c(b)})})}).catch(c)});return h(c,a),c}function _(a,b){var c=this,d=new va(function(b,d){c.ready().then(function(){var e=c._dbInfo;e.db.transaction(function(c){T(c,e,"SELECT key FROM "+e.storeName+" WHERE id = ? LIMIT 1",[a+1],function(a,c){var d=c.rows.length?c.rows.item(0).key:null;b(d)},function(a,b){d(b)})})}).catch(d)});return h(d,b),d}function aa(a){var b=this,c=new va(function(a,c){b.ready().then(function(){var d=b._dbInfo;d.db.transaction(function(b){T(b,d,"SELECT key FROM "+d.storeName,[],function(b,c){for(var d=[],e=0;e<c.rows.length;e++)d.push(c.rows.item(e).key);a(d)},function(a,b){c(b)})})}).catch(c)});return h(c,a),c}function ba(a){return new va(function(b,c){a.transaction(function(d){d.executeSql("SELECT name FROM sqlite_master WHERE type='table' AND name <> '__WebKitDatabaseInfoTable__'",[],function(c,d){for(var e=[],f=0;f<d.rows.length;f++)e.push(d.rows.item(f).name);b({db:a,storeNames:e})},function(a,b){c(b)})},function(a){c(a)})})}function ca(a,b){b=k.apply(this,arguments);var c=this.config();a="function"!=typeof a&&a||{},a.name||(a.name=a.name||c.name,a.storeName=a.storeName||c.storeName);var d,e=this;return d=a.name?new va(function(b){var d;d=a.name===c.name?e._dbInfo.db:openDatabase(a.name,"","",0),b(a.storeName?{db:d,storeNames:[a.storeName]}:ba(d))}).then(function(a){return new va(function(b,c){a.db.transaction(function(d){function e(a){return new va(function(b,c){d.executeSql("DROP TABLE IF EXISTS "+a,[],function(){b()},function(a,b){c(b)})})}for(var f=[],g=0,h=a.storeNames.length;g<h;g++)f.push(e(a.storeNames[g]));va.all(f).then(function(){b()}).catch(function(a){c(a)})},function(a){c(a)})})}):va.reject("Invalid arguments"),h(d,b),d}function da(){try{return"undefined"!=typeof localStorage&&"setItem"in localStorage&&!!localStorage.setItem}catch(a){return!1}}function ea(a,b){var c=a.name+"/";return a.storeName!==b.storeName&&(c+=a.storeName+"/"),c}function fa(){var a="_localforage_support_test";try{return localStorage.setItem(a,!0),localStorage.removeItem(a),!1}catch(a){return!0}}function ga(){return!fa()||localStorage.length>0}function ha(a){var b=this,c={};if(a)for(var d in a)c[d]=a[d];return c.keyPrefix=ea(a,b._defaultConfig),ga()?(b._dbInfo=c,c.serializer=Va,va.resolve()):va.reject()}function ia(a){var b=this,c=b.ready().then(function(){for(var a=b._dbInfo.keyPrefix,c=localStorage.length-1;c>=0;c--){var d=localStorage.key(c);0===d.indexOf(a)&&localStorage.removeItem(d)}});return h(c,a),c}function ja(a,b){var c=this;a=j(a);var d=c.ready().then(function(){var b=c._dbInfo,d=localStorage.getItem(b.keyPrefix+a);return d&&(d=b.serializer.deserialize(d)),d});return h(d,b),d}function ka(a,b){var c=this,d=c.ready().then(function(){for(var b=c._dbInfo,d=b.keyPrefix,e=d.length,f=localStorage.length,g=1,h=0;h<f;h++){var i=localStorage.key(h);if(0===i.indexOf(d)){var j=localStorage.getItem(i);if(j&&(j=b.serializer.deserialize(j)),void 0!==(j=a(j,i.substring(e),g++)))return j}}});return h(d,b),d}function la(a,b){var c=this,d=c.ready().then(function(){var b,d=c._dbInfo;try{b=localStorage.key(a)}catch(a){b=null}return b&&(b=b.substring(d.keyPrefix.length)),b});return h(d,b),d}function ma(a){var b=this,c=b.ready().then(function(){for(var a=b._dbInfo,c=localStorage.length,d=[],e=0;e<c;e++){var f=localStorage.key(e);0===f.indexOf(a.keyPrefix)&&d.push(f.substring(a.keyPrefix.length))}return d});return h(c,a),c}function na(a){var b=this,c=b.keys().then(function(a){return a.length});return h(c,a),c}function oa(a,b){var c=this;a=j(a);var d=c.ready().then(function(){var b=c._dbInfo;localStorage.removeItem(b.keyPrefix+a)});return h(d,b),d}function pa(a,b,c){var d=this;a=j(a);var e=d.ready().then(function(){void 0===b&&(b=null);var c=b;return new va(function(e,f){var g=d._dbInfo;g.serializer.serialize(b,function(b,d){if(d)f(d);else try{localStorage.setItem(g.keyPrefix+a,b),e(c)}catch(a){"QuotaExceededError"!==a.name&&"NS_ERROR_DOM_QUOTA_REACHED"!==a.name||f(a),f(a)}})})});return h(e,c),e}function qa(a,b){if(b=k.apply(this,arguments),a="function"!=typeof a&&a||{},!a.name){var c=this.config();a.name=a.name||c.name,a.storeName=a.storeName||c.storeName}var d,e=this;return d=a.name?new va(function(b){b(a.storeName?ea(a,e._defaultConfig):a.name+"/")}).then(function(a){for(var b=localStorage.length-1;b>=0;b--){var c=localStorage.key(b);0===c.indexOf(a)&&localStorage.removeItem(c)}}):va.reject("Invalid arguments"),h(d,b),d}function ra(a,b){a[b]=function(){var c=arguments;return a.ready().then(function(){return a[b].apply(a,c)})}}function sa(){for(var a=1;a<arguments.length;a++){var b=arguments[a];if(b)for(var c in b)b.hasOwnProperty(c)&&($a(b[c])?arguments[0][c]=b[c].slice():arguments[0][c]=b[c])}return arguments[0]}var ta="function"==typeof Symbol&&"symbol"==typeof Symbol.iterator?function(a){return typeof a}:function(a){return a&&"function"==typeof Symbol&&a.constructor===Symbol&&a!==Symbol.prototype?"symbol":typeof a},ua=e();"undefined"==typeof Promise&&a(3);var va=Promise,wa="local-forage-detect-blob-support",xa=void 0,ya={},za=Object.prototype.toString,Aa="readonly",Ba="readwrite",Ca={_driver:"asyncStorage",_initStorage:C,_support:f(),iterate:E,getItem:D,setItem:F,removeItem:G,clear:H,length:I,key:J,keys:K,dropInstance:L},Da="ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/",Ea="~~local_forage_type~",Fa=/^~~local_forage_type~([^~]+)~/,Ga="__lfsc__:",Ha=Ga.length,Ia="arbf",Ja="blob",Ka="si08",La="ui08",Ma="uic8",Na="si16",Oa="si32",Pa="ur16",Qa="ui32",Ra="fl32",Sa="fl64",Ta=Ha+Ia.length,Ua=Object.prototype.toString,Va={serialize:P,deserialize:Q,stringToBuffer:N,bufferToString:O},Wa={_driver:"webSQLStorage",_initStorage:S,_support:M(),iterate:V,getItem:U,setItem:X,removeItem:Y,clear:Z,length:$,key:_,keys:aa,dropInstance:ca},Xa={_driver:"localStorageWrapper",_initStorage:ha,_support:da(),iterate:ka,getItem:ja,setItem:pa,removeItem:oa,clear:ia,length:na,key:la,keys:ma,dropInstance:qa},Ya=function(a,b){return a===b||"number"==typeof a&&"number"==typeof b&&isNaN(a)&&isNaN(b)},Za=function(a,b){for(var c=a.length,d=0;d<c;){if(Ya(a[d],b))return!0;d++}return!1},$a=Array.isArray||function(a){return"[object Array]"===Object.prototype.toString.call(a)},_a={},ab={},bb={INDEXEDDB:Ca,WEBSQL:Wa,LOCALSTORAGE:Xa},cb=[bb.INDEXEDDB._driver,bb.WEBSQL._driver,bb.LOCALSTORAGE._driver],db=["dropInstance"],eb=["clear","getItem","iterate","key","keys","length","removeItem","setItem"].concat(db),fb={description:"",driver:cb.slice(),name:"localforage",size:4980736,storeName:"keyvaluepairs",version:1},gb=function(){function a(b){d(this,a);for(var c in bb)if(bb.hasOwnProperty(c)){var e=bb[c],f=e._driver;this[c]=f,_a[f]||this.defineDriver(e)}this._defaultConfig=sa({},fb),this._config=sa({},this._defaultConfig,b),this._driverSet=null,this._initDriver=null,this._ready=!1,this._dbInfo=null,this._wrapLibraryMethodsWithReady(),this.setDriver(this._config.driver).catch(function(){})}return a.prototype.config=function(a){if("object"===(void 0===a?"undefined":ta(a))){if(this._ready)return new Error("Can't call config() after localforage has been used.");for(var b in a){if("storeName"===b&&(a[b]=a[b].replace(/\W/g,"_")),"version"===b&&"number"!=typeof a[b])return new Error("Database version must be a number.");this._config[b]=a[b]}return!("driver"in a&&a.driver)||this.setDriver(this._config.driver)}return"string"==typeof a?this._config[a]:this._config},a.prototype.defineDriver=function(a,b,c){var d=new va(function(b,c){try{var d=a._driver,e=new Error("Custom driver not compliant; see https://mozilla.github.io/localForage/#definedriver");if(!a._driver)return void c(e);for(var f=eb.concat("_initStorage"),g=0,i=f.length;g<i;g++){var j=f[g];if((!Za(db,j)||a[j])&&"function"!=typeof a[j])return void c(e)}(function(){for(var b=function(a){return function(){var b=new Error("Method "+a+" is not implemented by the current driver"),c=va.reject(b);return h(c,arguments[arguments.length-1]),c}},c=0,d=db.length;c<d;c++){var e=db[c];a[e]||(a[e]=b(e))}})();var k=function(c){_a[d]&&console.info("Redefining LocalForage driver: "+d),_a[d]=a,ab[d]=c,b()};"_support"in a?a._support&&"function"==typeof a._support?a._support().then(k,c):k(!!a._support):k(!0)}catch(a){c(a)}});return i(d,b,c),d},a.prototype.driver=function(){return this._driver||null},a.prototype.getDriver=function(a,b,c){var d=_a[a]?va.resolve(_a[a]):va.reject(new Error("Driver not found."));return i(d,b,c),d},a.prototype.getSerializer=function(a){var b=va.resolve(Va);return i(b,a),b},a.prototype.ready=function(a){var b=this,c=b._driverSet.then(function(){return null===b._ready&&(b._ready=b._initDriver()),b._ready});return i(c,a,a),c},a.prototype.setDriver=function(a,b,c){function d(){g._config.driver=g.driver()}function e(a){return g._extend(a),d(),g._ready=g._initStorage(g._config),g._ready}function f(a){return function(){function b(){for(;c<a.length;){var f=a[c];return c++,g._dbInfo=null,g._ready=null,g.getDriver(f).then(e).catch(b)}d();var h=new Error("No available storage method found.");return g._driverSet=va.reject(h),g._driverSet}var c=0;return b()}}var g=this;$a(a)||(a=[a]);var h=this._getSupportedDrivers(a),j=null!==this._driverSet?this._driverSet.catch(function(){return va.resolve()}):va.resolve();return this._driverSet=j.then(function(){var a=h[0];return g._dbInfo=null,g._ready=null,g.getDriver(a).then(function(a){g._driver=a._driver,d(),g._wrapLibraryMethodsWithReady(),g._initDriver=f(h)})}).catch(function(){d();var a=new Error("No available storage method found.");return g._driverSet=va.reject(a),g._driverSet}),i(this._driverSet,b,c),this._driverSet},a.prototype.supports=function(a){return!!ab[a]},a.prototype._extend=function(a){sa(this,a)},a.prototype._getSupportedDrivers=function(a){for(var b=[],c=0,d=a.length;c<d;c++){var e=a[c];this.supports(e)&&b.push(e)}return b},a.prototype._wrapLibraryMethodsWithReady=function(){for(var a=0,b=eb.length;a<b;a++)ra(this,eb[a])},a.prototype.createInstance=function(b){return new a(b)},a}(),hb=new gb;b.exports=hb},{3:3}]},{},[4])(4)});
+/**
+ * Common database helper functions.
+ */
+class EmptyStorageError extends Error {
+
+}
+
+class DBHelper {
+
+  /**
+   * Database URL.
+   * Change this to restaurants.json file location on your server.
+   */
+  static get DATABASE_URL() {
+    return `http://localhost:1337/restaurants`;
+  }
+
+  /**
+   * Fetch new data
+   */
+  static fetchNewData() {
+    return fetch(DBHelper.DATABASE_URL)
+      .then(res => res.json())
+  }
+
+  /**
+   * Clear the IDB and put the new data
+   */
+
+  static putData(data) {
+    return localforage.clear().then(() => {
+      const promises = data.map(restaurant => localforage.setItem(restaurant.id, restaurant));
+      return Promise.all(promises);
+    });
+  }
+
+  static isEmpty(data) {
+    return localforage.length().then(length => {
+      return length === 0;
+    });
+  }
+
+  /**
+   * Update the IDB
+   */
+  static updateData() {
+    return fetch(DBHelper.DATABASE_URL)
+      .then(res => res.json())
+      .then(restaurants => {
+        return localforage.clear().then(() => {
+          return restaurants;
+        });
+      })
+      .then(restaurants => {
+        const promises = restaurants.map(restaurant => localforage.setItem(restaurant.id, restaurant));
+        return Promise.all(promises);
+      });
+  }
+
+  /**
+   * Fetch all restaurants.
+   */
+  static fetchRestaurants() {
+    return localforage.keys().then(keys => {
+      if (keys.length === 0) {
+        throw new EmptyStorageError();
+      }
+      const promises = keys.map(key => localforage.getItem(key));
+      return Promise.all(promises);
+    });
+  }
+
+  /**
+   * Fetch a restaurant by its ID.
+   */
+  static fetchRestaurantById(id) {
+    return localforage.getItem(id);
+  }
+
+  /**
+   * Fetch restaurants by a cuisine type with proper error handling.
+   */
+  static fetchRestaurantByCuisine(cuisine) {
+    return DBHelper.fetchRestaurants().then(restaraunts => {
+      return restaurants.filter(r => r.cuisine_type == cuisine);
+    });
+  }
+
+  /**
+   * Fetch restaurants by a neighborhood with proper error handling.
+   */
+  static fetchRestaurantByNeighborhood(neighborhood, callback) {
+    return DBHelper.fetchRestaurants().then(restaraunts => {
+      return restaurants.filter(r => r.neighborhood == neighborhood);
+    });
+  }
+
+  /**
+   * Fetch restaurants by a cuisine and a neighborhood with proper error handling.
+   */
+  static fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, callback) {
+    return DBHelper.fetchRestaurants().then(restaurants => {
+      if (cuisine != 'all') { // filter by cuisine
+        return restaurants.filter(r => r.cuisine_type == cuisine);
+      }
+      if (neighborhood != 'all') { // filter by neighborhood
+        return restaurants.filter(r => r.neighborhood == neighborhood);
+      }
+      
+      return restaurants;
+    });
+  }
+
+  /**
+   * Fetch all neighborhoods with proper error handling.
+   */
+  static fetchNeighborhoods() {
+    return DBHelper.fetchRestaurants().then(restaurants =>
+      restaurants
+        // Get all neighborhoods from all restaurants
+        .map((v, i) => restaurants[i].neighborhood)
+        // Remove duplicates from neighborhoods
+        .filter((v, i, neighborhoods) => neighborhoods.indexOf(v) == i)
+    );
+  }
+
+  /**
+   * Fetch all cuisines with proper error handling.
+   */
+  static fetchCuisines(callback) {
+    return DBHelper.fetchRestaurants().then(restaurants => 
+      restaurants
+        .map((v, i) => restaurants[i].cuisine_type)
+        .filter((v, i, cuisines) => cuisines.indexOf(v) == i)
+    );
+  }
+
+  /**
+   * Restaurant page URL.
+   */
+  static urlForRestaurant(restaurant) {
+    return (`./restaurant.html?id=${restaurant.id}`);
+  }
+
+  /**
+   * Restaurant image URL.
+   */
+  static imageUrlForRestaurant(restaurant) {
+    return (`/img/${restaurant.photograph}`);
+  }
+
+  /**
+   * Map marker for a restaurant.
+   */
+  static mapMarkerForRestaurant(restaurant, map) {
+    const marker = new google.maps.Marker({
+      position: restaurant.latlng,
+      title: restaurant.name,
+      url: DBHelper.urlForRestaurant(restaurant),
+      map: map,
+      animation: google.maps.Animation.DROP}
+    );
+    return marker;
+  }
+
+}
+
+let restaurant;
+var map;
+
+/**
+ * Initialize Google map, called from HTML.
+ */
+window.initMap = () => {
+  registerServiceWorker();
+  fetchRestaurantFromURL().then(restaurant => {
+    self.map = new google.maps.Map(document.getElementById('map'), {
+      zoom: 16,
+      center: restaurant.latlng,
+      scrollwheel: false
+    });
+    fillBreadcrumb();
+    DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
+  }).catch(console.error);
+}
+
+const registerServiceWorker = () => {
+  if('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('./sw.js', {scope: './'});
+  }
+}
+
+/**
+ * Get current restaurant from page URL.
+ */
+const fetchRestaurantFromURL = () => {
+  if (self.restaurant) { // restaurant already fetched!
+    return Promise.resolve(self.restaurant);
+  }
+
+  const id = getParameterByName('id');
+  if (!id) { // no id found in URL
+    return Promise.reject('No restaurant id in URL');
+  }
+  return DBHelper.fetchRestaurantById(id).then((restaurant) => {
+    self.restaurant = restaurant;
+    fillRestaurantHTML();
+    return restaurant;
+  });
+}
+
+/**
+ * Create restaurant HTML and add it to the webpage
+ */
+const fillRestaurantHTML = (restaurant = self.restaurant) => {
+  const name = document.getElementById('restaurant-name');
+  name.innerHTML = restaurant.name;
+
+  const address = document.getElementById('restaurant-address');
+  address.innerHTML = restaurant.address;
+
+  const image = document.getElementById('restaurant-img');
+  image.className = 'restaurant-img';
+  // the alt text is declared in the restaurant.html file,
+  // but when I submitted the project, the reviewer didn't spot it there
+  // so I decided to also declare it here, just in case.
+
+  // sorry for the last error here, it wasn't really smart lol
+  image.alt = `Photo of the ${restaurant.name} restaurant`;
+
+  const imageFile = DBHelper.imageUrlForRestaurant(restaurant);
+
+  image.src = `${imageFile}-480.jpg`;
+  image.srcset = `${imageFile}-480.jpg 1x, ${imageFile}-800.jpg 2x`;
+
+
+  const cuisine = document.getElementById('restaurant-cuisine');
+  cuisine.innerHTML = restaurant.cuisine_type;
+
+  // fill operating hours
+  if (restaurant.operating_hours) {
+    fillRestaurantHoursHTML();
+  }
+  // fill reviews
+  fillReviewsHTML();
+}
+
+/**
+ * Create restaurant operating hours HTML table and add it to the webpage.
+ */
+const fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => {
+  const hours = document.getElementById('restaurant-hours');
+  const tbody = hours.querySelector('tbody');
+  for (let key in operatingHours) {
+    const row = document.createElement('tr');
+
+    const day = document.createElement('th');
+    day.classList.add('left')
+    day.innerHTML = key;
+    row.appendChild(day);
+
+    const time = document.createElement('td');
+    time.classList.add('right')
+    const timeSpan = document.createElement('span');
+    timeSpan.innerHTML = operatingHours[key];
+    time.appendChild(timeSpan);
+    row.appendChild(time);
+
+    tbody.appendChild(row);
+  }
+}
+
+/**
+ * Create all reviews HTML and add them to the webpage.
+ */
+const fillReviewsHTML = (reviews = self.restaurant.reviews) => {
+  const container = document.getElementById('reviews-container');
+
+  if (!reviews) {
+    const noReviews = document.createElement('p');
+    noReviews.innerHTML = 'No reviews yet!';
+    container.appendChild(noReviews);
+    return;
+  }
+  const ul = document.getElementById('reviews-list');
+  reviews.forEach(review => {
+    ul.appendChild(createReviewHTML(review));
+  });
+  container.appendChild(ul);
+}
+
+/**
+ * Create review HTML and add it to the webpage.
+ */
+const createReviewHTML = (review) => {
+  const li = document.createElement('li');
+  li.classList.add('card');
+
+  const name = document.createElement('span');
+  name.classList.add('username');
+  name.innerHTML = review.name;
+  li.appendChild(name);
+
+  const date = document.createElement('span');
+  date.classList.add('date');
+  date.innerHTML = review.date;
+  li.appendChild(date);
+
+  const rating = document.createElement('p');
+  rating.classList.add('rating');
+  rating.innerHTML = '★'.repeat(review.rating);
+  li.appendChild(rating);
+
+  const comments = document.createElement('p');
+  comments.classList.add('comments');
+  comments.innerHTML = review.comments;
+
+  li.appendChild(comments);
+
+  return li;
+}
+
+
+/**
+ * Add restaurant name to the breadcrumb navigation menu
+ */
+const fillBreadcrumb = (restaurant=self.restaurant) => {
+  const breadcrumb = document.getElementById('breadcrumb');
+  const li = document.createElement('li');
+  li.innerHTML = restaurant.name;
+  li.setAttribute('aria-current', 'page'); // to indicate that it represents the current page.
+  breadcrumb.appendChild(li);
+}
+
+/**
+ * Get a parameter by name from page URL.
+ */
+const getParameterByName = (name, url) => {
+  if (!url)
+    url = window.location.href;
+  name = name.replace(/[\[\]]/g, '\\$&');
+  const regex = new RegExp(`[?&]${name}(=([^&#]*)|&|#|$)`),
+    results = regex.exec(url);
+  if (!results)
+    return null;
+  if (!results[2])
+    return '';
+  return decodeURIComponent(results[2].replace(/\+/g, ' '));
+}
+
+// Review stars
+
+const picker = document.querySelector('.rating-stars-picker');
+const stars = document.querySelectorAll('.star');
+
+let pickedId = null;
+
+const onStarMouseOver = (event) => {
+  const id = event.target.id;
+  clearStars();
+  fillStars(id);
+}
+
+const onStarMouseClick = (event) => {
+  const id = event.target.id;
+  saveRating(id);
+}
+
+const saveRating = (id) => {
+  pickedId = id;
+  picker.setAttribute('rating', id + 1);
+  picker.setAttribute('aria-valuenow', id + 1);
+  picker.setAttribute('aria-valuetext', `${id + 1} out of 5`); 
+}
+
+const onPickerMouseOut = () => {
+  clearStars();
+  if (pickedId != null) {
+    fillStars(pickedId);
+  }
+}
+
+const displayRating = (id) => {
+  clearStars();
+  fillStars(id);
+}
+
+const clearStars = () => {
+  stars.forEach(star => star.textContent = '☆');
+}
+
+const fillStars = (id) => {
+  id = parseInt(id);
+  const starsToBeFilled = Array.from(stars).slice(0, id + 1);
+  starsToBeFilled.forEach(star => star.textContent = '★');
+}
+
+picker.addEventListener('mouseout', onPickerMouseOut);
+
+stars.forEach(star => {
+  star.addEventListener('click', onStarMouseClick);
+  star.addEventListener('mouseover', onStarMouseOver);
+});
+
+picker.addEventListener('keydown', (event) => {
+  switch(event.keyCode) {
+    case 38: // arrow up
+    case 39: // arrow right
+      // increase rating
+      if (pickedId == null) {
+        pickedId = 0;
+      } else if (pickedId === 4) {
+        pickedId = 0;
+      } else {
+        pickedId++;
+      }
+      displayRating(pickedId);
+      saveRating(pickedId);
+      break;
+    case 37: // arrow left
+    case 40: // arrow down
+      // lower rating
+      if (pickedId == null) {
+        pickedId = 4;
+      } else if (pickedId == 0) {
+        pickedId = 4;
+      } else {
+        pickedId--;
+      }
+      displayRating(pickedId);
+      saveRating(pickedId);
+      break;
+  }
+});
+
+
+// Form Submission
+
+const nameField = document.querySelector('#reviewer-name-field');
+const reviewField = document.querySelector('#review-comment-field');
+
+const submitButton = document.querySelector('#submit-review');
+
+const onSubmit = () => {
+  const name = nameField.value;
+  const comments = reviewField.value;
+  const rating = picker.getAttribute('rating');
+
+  const review = {
+    restaurant_id: getParameterByName('id'),
+    name: name,
+    rating: rating,
+    commments: comments,
+  }
+
+  saveReviewLocally(review);  
+  displayLocallyCreatedReview(review);
+}
+
+const offlineChangesStore = localforage.createInstance({
+  name: 'offlineChangesStore',
+})
+
+const saveReviewLocally = (review) => {
+  offlineChangesStore.length().then(lastIndex => {
+    const key = `${lastIndex}-review`;
+    return localforage.setItem(key, review);
+  })
+}
+
+const displayLocallyCreatedReview = (review) => {
+  review.data = new Date()
+  const reviewElement = createReviewHTML(review);
+  self.restaurant.reviews = [review, ...self.restaurant.reviews];
+  fillReviewsHTML();
+}
+
+submitButton.addEventListener('click', onSubmit);

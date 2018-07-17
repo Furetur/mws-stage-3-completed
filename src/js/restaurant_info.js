@@ -1,6 +1,44 @@
 let restaurant;
 var map;
 
+
+document.addEventListener('DOMContentLoaded', async (event) => {
+  console.info('%c Loading...', 'color: orange;');
+
+  showSpinner();
+
+  let restaurants;
+
+  try {
+    restaurants = await DBHelper.fetchRestaurants();
+  } catch(e) {
+    if (e instanceof EmptyStorageError) {
+      // the storage is empty
+      restaurants = await DBHelper.fetchNewData();
+      await DBHelper.putData(restaurants);
+
+    } else {
+      console.error(e);
+    }
+  }
+
+  setDropdowns(restaurants);
+
+  hideSpinner();
+
+  registerServiceWorker();
+
+  try {
+    await updateRestaurants();
+  } catch(e) {
+    console.error('Shit fuck', e);
+  }
+
+  console.info('%c Loaded!', 'color: green;');
+});
+
+
+
 /**
  * Initialize Google map, called from HTML.
  */
@@ -180,3 +218,132 @@ const getParameterByName = (name, url) => {
     return '';
   return decodeURIComponent(results[2].replace(/\+/g, ' '));
 }
+
+// Review stars
+
+const picker = document.querySelector('.rating-stars-picker');
+const stars = document.querySelectorAll('.star');
+
+let pickedId = null;
+
+const onStarMouseOver = (event) => {
+  const id = event.target.id;
+  clearStars();
+  fillStars(id);
+}
+
+const onStarMouseClick = (event) => {
+  const id = event.target.id;
+  saveRating(id);
+}
+
+const saveRating = (id) => {
+  pickedId = id;
+  picker.setAttribute('rating', id + 1);
+  picker.setAttribute('aria-valuenow', id + 1);
+  picker.setAttribute('aria-valuetext', `${id + 1} out of 5`); 
+}
+
+const onPickerMouseOut = () => {
+  clearStars();
+  if (pickedId != null) {
+    fillStars(pickedId);
+  }
+}
+
+const displayRating = (id) => {
+  clearStars();
+  fillStars(id);
+}
+
+const clearStars = () => {
+  stars.forEach(star => star.textContent = '☆');
+}
+
+const fillStars = (id) => {
+  id = parseInt(id);
+  const starsToBeFilled = Array.from(stars).slice(0, id + 1);
+  starsToBeFilled.forEach(star => star.textContent = '★');
+}
+
+picker.addEventListener('mouseout', onPickerMouseOut);
+
+stars.forEach(star => {
+  star.addEventListener('click', onStarMouseClick);
+  star.addEventListener('mouseover', onStarMouseOver);
+});
+
+picker.addEventListener('keydown', (event) => {
+  switch(event.keyCode) {
+    case 38: // arrow up
+    case 39: // arrow right
+      // increase rating
+      if (pickedId == null) {
+        pickedId = 0;
+      } else if (pickedId === 4) {
+        pickedId = 0;
+      } else {
+        pickedId++;
+      }
+      displayRating(pickedId);
+      saveRating(pickedId);
+      break;
+    case 37: // arrow left
+    case 40: // arrow down
+      // lower rating
+      if (pickedId == null) {
+        pickedId = 4;
+      } else if (pickedId == 0) {
+        pickedId = 4;
+      } else {
+        pickedId--;
+      }
+      displayRating(pickedId);
+      saveRating(pickedId);
+      break;
+  }
+});
+
+
+// Form Submission
+
+const nameField = document.querySelector('#reviewer-name-field');
+const reviewField = document.querySelector('#review-comment-field');
+
+const submitButton = document.querySelector('#submit-review');
+
+const onSubmit = () => {
+  const name = nameField.value;
+  const comments = reviewField.value;
+  const rating = picker.getAttribute('rating');
+
+  const review = {
+    restaurant_id: getParameterByName('id'),
+    name: name,
+    rating: rating,
+    commments: comments,
+  }
+
+  saveReviewLocally(review);  
+  displayLocallyCreatedReview(review);
+}
+
+const offlineChangesStore = localforage.createInstance({
+  name: 'offlineChangesStore',
+})
+
+const saveReviewLocally = (review) => {
+  offlineChangesStore.length().then(lastIndex => {
+    const key = `${lastIndex}-review`;
+    return localforage.setItem(key, review);
+  })
+}
+
+const displayLocallyCreatedReview = (review) => {
+  review.data = new Date()
+  const reviewElement = createReviewHTML(review);
+  self.restaurant.reviews = [review, ...self.restaurant.reviews];
+  fillReviewsHTML();
+}
+
+submitButton.addEventListener('click', onSubmit);

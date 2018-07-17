@@ -74,15 +74,15 @@
       <section id="reviews-container">
         <h2>Reviews</h2>
         <h3>Add a review</h3>
-        <div id="reviews-form">
-          <input type="text" id="reviewer-name-field" placeholder="Your name">
-          <textarea id="review-comment-field" placeholder="Write anything about the restaurant" cols="30" rows="10"></textarea>
-          <div class="rating-stars-picker">
-            <span class="star" id="1">☆</span>
-            <span class="star" id="2">☆</span>
-            <span class="star" id="3">☆</span>
-            <span class="star" id="4">☆</span>
-            <span class="star" id="5">☆</span>
+        <div id="reviews-form" role="form">
+          <input type="text" id="reviewer-name-field" aria-label="Your name" placeholder="Your name" required>
+          <textarea id="review-comment-field" aria-label="Your review" placeholder="Write anything about the restaurant" cols="30" rows="10" required></textarea>
+          <div class="rating-stars-picker" tabindex="0" role="slider" aria-label="Rating" aria-orientation="horizontal" aria-valuemin="1" aria-valuemax="5" aria>
+            <span class="star" id="0" tabindex="-1">☆</span>
+            <span class="star" id="1" tabindex="-1">☆</span>
+            <span class="star" id="2" tabindex="-1">☆</span>
+            <span class="star" id="3" tabindex="-1">☆</span>
+            <span class="star" id="4" tabindex="-1">☆</span>
           </div>
           <button id="submit-review" class="action-button">Submit</button>
         </div>
