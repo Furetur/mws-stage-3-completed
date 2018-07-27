@@ -12,83 +12,114 @@ class EmptyStorageError extends Error {
 
 }
 
+class NoRestaurantFoundError extends Error {
+
+}
+
+const restaurantsStore = localforage.createInstance({
+  name: 'restaurantsStore',
+});
+
+const reviewsStore = localforage.createInstance({
+  name: 'reviewsStore',
+});
+
+const offlineRequestsStore = localforage.createInstance({
+  name: 'offlineRequestsStore',
+});
+
+
 class DBHelper {
 
   /**
    * Database URL.
    * Change this to restaurants.json file location on your server.
    */
-  static get DATABASE_URL() {
+  static get RESTAURANTS_URL() {
     return `http://localhost:1337/restaurants`;
   }
 
-  /**
-   * Fetch new data
-   */
-  static fetchNewData() {
-    return fetch(DBHelper.DATABASE_URL)
-      .then(res => res.json())
+  static get REVIEWS_URL() {
+    return `http://localhost:1337/reviews`;
+  }
+
+  
+  static get POST_REVIEW_URL() {
+    return `http://localhost:1337/reviews/`;
+  }
+  
+  static PUT_FAV_URL(restaurantId, fav) {
+    return `http://localhost:1337/restaurants/${restaurantId}/?is_favorite=${fav}`;
+  }
+  // -----------------
+  // Online Requests
+  // -----------------
+
+  static fetchRestaurants() {
+    return fetch(DBHelper.RESTAURANTS_URL).then(res => res.json())
+  }
+
+  static fetchRestaurantById(id) {
+    return fetch(`${DBHelper.RESTAURANTS_URL}/${id}`).then(res => res.json());
+  }
+
+  static fetchReviews() {
+    return fetch(DBHelper.REVIEWS_URL).then(res => res.json());
+  }
+  
+  static fetchReviewsForRestaurant(id) {
+    return fetch(`${DBHelper.REVIEWS_URL}/?restaurant_id=${id}`).then(r => r.json());  
   }
 
   /**
    * Clear the IDB and put the new data
    */
 
-  static putData(data) {
-    return localforage.clear().then(() => {
-      const promises = data.map(restaurant => localforage.setItem(restaurant.id, restaurant));
-      return Promise.all(promises);
-    });
-  }
-
-  static isEmpty(data) {
-    return localforage.length().then(length => {
-      return length === 0;
-    });
-  }
-
+  
+  
   /**
-   * Update the IDB
+   * Get all locally saved restaurants.
    */
-  static updateData() {
-    return fetch(DBHelper.DATABASE_URL)
-      .then(res => res.json())
-      .then(restaurants => {
-        return localforage.clear().then(() => {
-          return restaurants;
-        });
-      })
-      .then(restaurants => {
-        const promises = restaurants.map(restaurant => localforage.setItem(restaurant.id, restaurant));
-        return Promise.all(promises);
-      });
-  }
-
-  /**
-   * Fetch all restaurants.
-   */
-  static fetchRestaurants() {
-    return localforage.keys().then(keys => {
+  static getRestaurants() {
+    return restaurantsStore.keys().then(keys => {
       if (keys.length === 0) {
         throw new EmptyStorageError();
       }
-      const promises = keys.map(key => localforage.getItem(key));
+      const promises = keys.map(key => restaurantsStore.getItem(key));
       return Promise.all(promises);
+    });
+  }
+  
+  /**
+   * Save restaraunt locally
+   */
+  
+  static async putRestaurant(restaurant) {
+    return restaurantsStore.setItem(restaurant.id.toString(), restaurant);
+  }
+  
+  static putRestaurants(data) {
+    const promises = data.map(this.putRestaurant);
+    return Promise.all(promises);
+  }
+
+
+  /**
+   * Get a locally saved restaurant by its ID.
+   */
+  static getRestaurantById(id) {
+    return restaurantsStore.getItem(id).then(restaurant => {
+      if (restaurant == null)
+        throw new NoRestaurantFoundError();
+      return restaurant;
     });
   }
 
   /**
-   * Fetch a restaurant by its ID.
+   * Get locally saved restaurants by a cuisine type with proper error handling.
    */
-  static fetchRestaurantById(id) {
-    return localforage.getItem(id);
-  }
-
-  /**
-   * Fetch restaurants by a cuisine type with proper error handling.
-   */
-  static fetchRestaurantByCuisine(cuisine) {
-    return DBHelper.fetchRestaurants().then(restaraunts => {
+  static getRestaurantByCuisine(cuisine) {
+    return DBHelper.getRestaurants().then(restaurants => {
       return restaurants.filter(r => r.cuisine_type == cuisine);
     });
   }
@@ -96,33 +127,19 @@ class DBHelper {
   /**
    * Fetch restaurants by a neighborhood with proper error handling.
    */
-  static fetchRestaurantByNeighborhood(neighborhood, callback) {
-    return DBHelper.fetchRestaurants().then(restaraunts => {
+  static getRestaurantByNeighborhood(neighborhood) {
+    return DBHelper.getRestaurants().then(restaurants => {
       return restaurants.filter(r => r.neighborhood == neighborhood);
     });
   }
 
-  /**
-   * Fetch restaurants by a cuisine and a neighborhood with proper error handling.
-   */
-  static fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood, callback) {
-    return DBHelper.fetchRestaurants().then(restaurants => {
-      if (cuisine != 'all') { // filter by cuisine
-        return restaurants.filter(r => r.cuisine_type == cuisine);
-      }
-      if (neighborhood != 'all') { // filter by neighborhood
-        return restaurants.filter(r => r.neighborhood == neighborhood);
-      }
-      
-      return restaurants;
-    });
-  }
+
 
   /**
-   * Fetch all neighborhoods with proper error handling.
+   * Get all locally saved neighborhoods with proper error handling.
    */
-  static fetchNeighborhoods() {
-    return DBHelper.fetchRestaurants().then(restaurants =>
+  static getNeighborhoods() {
+    return DBHelper.getRestaurants().then(restaurants =>
       restaurants
         // Get all neighborhoods from all restaurants
         .map((v, i) => restaurants[i].neighborhood)
@@ -132,10 +149,10 @@ class DBHelper {
   }
 
   /**
-   * Fetch all cuisines with proper error handling.
+   * Get all locally saved cuisines with proper error handling.
    */
-  static fetchCuisines(callback) {
-    return DBHelper.fetchRestaurants().then(restaurants => 
+  static getCuisines() {
+    return DBHelper.getRestaurants().then(restaurants => 
       restaurants
         .map((v, i) => restaurants[i].cuisine_type)
         .filter((v, i, cuisines) => cuisines.indexOf(v) == i)
@@ -143,19 +160,157 @@ class DBHelper {
   }
 
   /**
+   * Get all locally saved reviews
+   */
+  static async getReviews() {
+    const keys = await reviewsStore.keys();
+    if (keys.length === 0) {
+      throw new EmptyStorageError();
+    }
+    const promises = keys.map(key => reviewsStore.getItem(key));
+    return Promise.all(promises);
+  }
+
+  static async getReviewsForRestaurant(id) {
+    try {
+      const reviews = await DBHelper.getReviews();
+      return reviews.filter(review => review.restaurant_id == id);
+    } catch(e) {
+      throw e;
+    }
+  }
+
+  static putReview(review) {
+    return reviewsStore.setItem(review.id.toString(), review);
+  }
+
+  /**
+   * Save reviews locally
+   * @param {Array} reviews 
+   */
+  static putReviews(reviews) {
+    const promises = reviews.map(this.putReview);
+    return Promise.all(promises);
+  }
+
+  // ----------------------
+  // OFFLINE REQUESTS STORE
+  // ----------------------
+
+  static async saveRequestLocally(restaurantId, type, request, filterFunction = () => true) {
+    const savedRequests = await offlineRequestsStore.getItem(restaurantId) || [];
+    const filteredSavedRequests = savedRequests.filter(filterFunction);
+    const requestToSave = {
+      type: type,
+      body: request,
+    }
+    await offlineRequestsStore.setItem(restaurantId, [...filteredSavedRequests, requestToSave]);
+  }
+
+  static async getAllLocallySavedRequestsByRestaurant(restaurantId) {
+    return offlineRequestsStore.getItem(restaurantId);
+  }
+
+  static clearLocalRequests() {
+    return offlineRequestsStore.clear();
+  }
+
+  static get localRequestHandlers() {
+    return {
+      'fav': DBHelper.favHandler,
+      'review': DBHelper.reviewHandler,
+    }
+  }
+
+  static favHandler(request) {
+    return fetch(DBHelper.PUT_FAV_URL(request.restaurant_id, request.fav), {
+      method: 'PUT'
+    });
+  }
+
+  static reviewHandler(request) {
+    return fetch(DBHelper.POST_REVIEW_URL, {
+      headers: {
+        'Accept': 'application/json',
+        'Content-Type': 'application/json'
+      },
+      method: 'POST',
+      body: JSON.stringify(request)
+    })
+  }
+
+  static uploadRequest(request) {
+    const handler = DBHelper.localRequestHandlers[request.type];
+    return handler(request.body);
+  }
+
+  static async uploadLocalRequestsForRestaurant(restaurantId) {
+    const requests = await this.getAllLocallySavedRequestsByRestaurant(restaurantId);
+    const promises = requests.map(this.uploadRequest);
+    return Promise.all(promises);
+  }
+
+  static async uploadLocalRequests() {
+    const restaurantIds = await offlineRequestsStore.keys();
+    const promises = restaurantIds.map(id => DBHelper.uploadLocalRequestsForRestaurant(id));
+    return Promise.all(promises);
+  }
+
+  // ------------------
+  // Waiting for network
+  // ------------------
+
+  /**
+   * Retries uploading local requests and updating database
+   */
+  static tryUntilSuceedes(fn) {
+    return new Promise(resolve => {
+      const action = async () => {
+        try {
+          const result = await fn();
+          clearInterval(interval);
+          resolve(result)
+          console.log('Action succeded')
+        } catch(e) {
+          console.log('operation failed due to error', e);
+          console.log('waiting')
+        }
+      }
+  
+      const interval = setInterval(action, 5000);
+    });
+  }
+
+  static async tryUploadingLocalRequests() {
+    await this.tryUntilSuceedes(this.uploadLocalRequests);
+    await DBHelper.clearLocalRequests();
+  }
+
+  static tryFetchingRestaurants() {
+    return this.tryUntilSuceedes(this.fetchRestaurants);
+  }
+
+  static tryFetchingReviews() {
+    return this.tryUntilSuceedes(this.fetchReviews);
+  }
+
+
+  
+  
+  /**
    * Restaurant page URL.
    */
   static urlForRestaurant(restaurant) {
     return (`./restaurant.html?id=${restaurant.id}`);
   }
-
+  
   /**
    * Restaurant image URL.
    */
   static imageUrlForRestaurant(restaurant) {
     return (`/img/${restaurant.photograph}`);
   }
-
+  
   /**
    * Map marker for a restaurant.
    */
@@ -170,6 +325,20 @@ class DBHelper {
     return marker;
   }
 
+  static async updateInBackground() {
+    // update the db in the background
+    const fetchedRestaurants = await DBHelper.tryFetchingRestaurants();
+    await DBHelper.putRestaurants(fetchedRestaurants);
+    console.log('Restaurants fetched')
+
+    const fetchedReviews = await DBHelper.tryFetchingReviews();
+    await DBHelper.putReviews(fetchedReviews);
+    console.log('Reviews fetched');
+
+    // upload all local requests
+    await DBHelper.tryUploadingLocalRequests();
+    console.log('Requests uploaded');
+  }
 }
 
 const LOAD_FIRST_CARDS = 1;
@@ -185,7 +354,11 @@ var markers = []
  * Fetch neighborhoods and cuisines while the page is loading
  */
 
-
+const mapLoaded = new Promise(resolve => {
+  window.initMap = () => {
+    resolve();
+  }
+})
 
 document.addEventListener('DOMContentLoaded', async (event) => {
   console.info('%c Loading...', 'color: orange;');
@@ -195,66 +368,79 @@ document.addEventListener('DOMContentLoaded', async (event) => {
   let restaurants;
 
   try {
-    restaurants = await DBHelper.fetchRestaurants();
+    restaurants = await DBHelper.getRestaurants();
   } catch(e) {
     if (e instanceof EmptyStorageError) {
       // the storage is empty
-      restaurants = await DBHelper.fetchNewData();
-      await DBHelper.putData(restaurants);
+      restaurants = await DBHelper.fetchRestaurants();
+      await DBHelper.putRestaurants(restaurants);
 
     } else {
       console.error(e);
     }
   }
 
+
   setDropdowns(restaurants);
+
+
+  try {
+    await updateRestaurants(restaurants);
+  } catch(e) {
+    console.error(e); 
+  }
+
+  mapLoaded.then(() => {
+    // when map has loaded
+    prepareMap(restaurants)
+  });
 
   hideSpinner();
 
   registerServiceWorker();
 
-  try {
-    await updateRestaurants();
-  } catch(e) {
-    console.error('Shit fuck', e);
-  }
-
   console.info('%c Loaded!', 'color: green;');
+
+  await DBHelper.updateInBackground();
+
 });
 
-
-window.addEventListener('load', async () => {
-  console.info('%c Idling...', 'color: purple;');
-  const startTime = Date.now();
-
-  // await DBHelper.updateData();
-  // await fetchAll();
-
-  const endTime = Date.now();
-
-  console.log(`%c Idled for ${endTime - startTime}ms`, 'color: purple;')
-});
-
-
-const fetchAll = () => {
-  return Promise.all(
-    [fetchNeighborhoods(), fetchCuisines()]
-  )
-}
 
 const setDropdowns = (restaurants) => {
   setNeighborhoods(restaurants);
   setCuisines(restaurants);
 }
 
+const cSelect = document.getElementById('cuisines-select');
+
 const setCuisines = (restaurants) => {
   const cuisines = getCuisinesFromRestaurants(restaurants);
   fillCuisinesHTML(cuisines);
+  cSelect.addEventListener('change', () => {
+    updateRestaurants(restaurants)
+  })
 }
+
+const nSelect = document.getElementById('neighborhoods-select');
 
 const setNeighborhoods = (restaurants) => {
   const neighborhoods = getNeighborhoodsFromRestaurants(restaurants);
   fillNeighborhoodsHTML(neighborhoods);
+  nSelect.addEventListener('change', () => {
+    updateRestaurants(restaurants)
+  })
+}
+
+
+const getSelectedNeighborhood = () => {
+  const nIndex = nSelect.selectedIndex;
+  return nSelect[nIndex].value;
+}
+
+
+const getSelectedCuisine = () => {
+  const cIndex = cSelect.selectedIndex;
+  return cSelect[cIndex].value;
 }
 
 const getCuisinesFromRestaurants = (restaurants) => {
@@ -270,12 +456,16 @@ const getNeighborhoodsFromRestaurants = (restaurants) => {
 }
 
 
-const updateContent = () => {
-  fetchNeighborhoods();
-  fetchCuisines();
-  return updateRestaurants();
-};
-
+const filterRestaurantsByCuisineAndNeighborhood = (restaurants, cuisine, neighborhood) => {
+  if (cuisine != 'all') { // filter by cuisine
+    return restaurants.filter(r => r.cuisine_type == cuisine);
+  }
+  if (neighborhood != 'all') { // filter by neighborhood
+    return restaurants.filter(r => r.neighborhood == neighborhood);
+  }
+  
+  return restaurants;
+}
 
 const registerServiceWorker = () => {
   if('serviceWorker' in navigator) {
@@ -362,17 +552,6 @@ const getCardsToPreload = () => getCards().slice(0, LOAD_FIRST_CARDS);
 
 
 /**
- * Fetch all neighborhoods and set their HTML.
- */
-const fetchNeighborhoods = () => {
-  return DBHelper.fetchNeighborhoods().then(neighborhoods => {
-    self.neighborhoods = neighborhoods;
-    fillNeighborhoodsHTML();
-    return neighborhoods;
-  });
-}
-
-/**
  * Set neighborhoods HTML.
  */
 const fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
@@ -413,7 +592,19 @@ const fillCuisinesHTML = (cuisines = self.cuisines) => {
 /**
  * Initialize Google map, called from HTML.
  */
-window.initMap = () => {
+
+const showMapButton = document.querySelector('#show-map-button');
+
+const prepareMap = (restaurants) => {
+  console.log('Map is ready to be shown');
+  showMapButton.addEventListener('click', () => {
+    showMapButton.style.display = 'none';
+    showMap(restaurants);
+  })
+}
+
+const showMap = (restaurants) => {
+  console.log('showing the map')
   let loc = {
     lat: 40.722216,
     lng: -73.987501
@@ -423,27 +614,28 @@ window.initMap = () => {
     center: loc,
     scrollwheel: false
   });
-  
+  addMarkersToMap(restaurants)
+}
+
+
+const getRestaurantsToShow = (restaurants) => {
+  const neighborhood = getSelectedNeighborhood();
+  const cuisine = getSelectedCuisine();
+  return filterRestaurantsByCuisineAndNeighborhood(restaurants, cuisine, neighborhood)
 }
 
 /**
  * Update page and map for current restaurants.
  */
-const updateRestaurants = () => {
-  const cSelect = document.getElementById('cuisines-select');
-  const nSelect = document.getElementById('neighborhoods-select');
-
-  const cIndex = cSelect.selectedIndex;
-  const nIndex = nSelect.selectedIndex;
-
-  const cuisine = cSelect[cIndex].value;
-  const neighborhood = nSelect[nIndex].value;
-
-  return DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood).then(restaurants => {
-    resetRestaurants(restaurants);
-    fillRestaurantsHTML(restaurants);
-    implementLazyLoading(getCardsToPreload());
-  });
+const updateRestaurants = (restaurants) => {
+  const restaurantsToShow = getRestaurantsToShow(restaurants);
+  // reset the list and remove markers
+  resetRestaurants(restaurantsToShow);
+  // add cards to list
+  fillRestaurantsHTML(restaurantsToShow);
+  // add markers to map
+  addMarkersToMap(restaurantsToShow);
+  implementLazyLoading(getCardsToPreload());
 }
 
 /**
@@ -469,7 +661,6 @@ const fillRestaurantsHTML = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
     ul.append(createRestaurantHTML(restaurant));
   });
-  addMarkersToMap();
 }
 
 /**
@@ -554,7 +745,7 @@ const createResponsiveImageFor = (imageName) => {
 /**
  * Add markers for current restaurants to the map.
  */
-const addMarkersToMap = (restaurants = self.restaurants) => {
+const addMarkersToMap = (restaurants) => {
   restaurants.forEach(restaurant => {
     // Add marker to the map
     const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);

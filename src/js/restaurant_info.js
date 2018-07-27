@@ -1,5 +1,8 @@
-let restaurant;
-var map;
+const mapLoaded = new Promise(resolve => {
+  window.initMap = () => {
+    resolve();
+  }
+})
 
 
 document.addEventListener('DOMContentLoaded', async (event) => {
@@ -7,52 +10,128 @@ document.addEventListener('DOMContentLoaded', async (event) => {
 
   showSpinner();
 
-  let restaurants;
+  const restaurantId = getRestaurantIdFromUrl();
+  let restaurant;
 
   try {
-    restaurants = await DBHelper.fetchRestaurants();
+    console.log('Trying to get restaurant from the cache');
+    restaurant = await DBHelper.getRestaurantById(restaurantId);
   } catch(e) {
-    if (e instanceof EmptyStorageError) {
+    if (e instanceof NoRestaurantFoundError) {
       // the storage is empty
-      restaurants = await DBHelper.fetchNewData();
-      await DBHelper.putData(restaurants);
-
+      console.log('failed. Trying to fetch the restaurant')
+      try {
+        restaurant = await DBHelper.fetchRestaurantById(restaurantId);
+      } catch(e) {
+        throw e;
+      }
+      console.log('putting the restaurant')
+      await DBHelper.putRestaurant(restaurant);
     } else {
       console.error(e);
     }
   }
 
-  setDropdowns(restaurants);
+  fillBreadcrumb(restaurant);
 
+  fillRestaurantHTML(restaurant);
+
+  mapLoaded.then(() => {
+    // when map has loaded
+    prepareMap(restaurant)
+  });
+  
   hideSpinner();
-
+  
   registerServiceWorker();
+  
+  console.info('%c Loaded!', 'color: green;');
+
+  let reviews;
 
   try {
-    await updateRestaurants();
-  } catch(e) {
-    console.error('Shit fuck', e);
+    console.log('Trying to get reviews from the cache')
+    reviews = await DBHelper.getReviewsForRestaurant(restaurantId);
+  } catch (e) {
+    if (e instanceof EmptyStorageError) {
+      console.log('failed. No reviews are found in cache');
+      try {
+        console.log('Trying to fetch reviews');
+        reviews = await DBHelper.fetchReviewsForRestaurant(restaurantId)
+      } catch(e) {
+        throw e;
+      }
+    }
   }
 
-  console.info('%c Loaded!', 'color: green;');
+  const localRequests = await DBHelper.getAllLocallySavedRequestsByRestaurant(restaurantId);
+
+  const allReviews = [...getLocalReviews(localRequests), ...reviews]
+
+  lazyLoadReviewsSection(allReviews);
+  setUpReviewForm(allReviews);
+  setUpFavoriteButton(restaurant, getLocalFav(localRequests));
+
+  // update db in background
+  await DBHelper.updateInBackground();
+
 });
 
+const getLocalReviews = (localRequests) => {
+  localRequests = localRequests || [];
+  return localRequests.filter(req => req.type === 'review').map(review => review.body);
+}
 
+const getLocalFav = (localRequests) => {
+  localRequests = localRequests || []
 
-/**
- * Initialize Google map, called from HTML.
- */
-window.initMap = () => {
-  registerServiceWorker();
-  fetchRestaurantFromURL().then(restaurant => {
-    self.map = new google.maps.Map(document.getElementById('map'), {
-      zoom: 16,
-      center: restaurant.latlng,
-      scrollwheel: false
-    });
-    fillBreadcrumb();
-    DBHelper.mapMarkerForRestaurant(self.restaurant, self.map);
-  }).catch(console.error);
+  const savedRequest = localRequests.find(req => req.type === 'fav');
+  
+  if (!savedRequest) {
+    return null;
+  }
+  return savedRequest.body;
+}
+
+// --------------------------
+// Lazyloading
+// --------------------------
+
+const lazyLoadReviewsSection = (reviews,) => {
+  const showReviews = ([entry]) => {
+    if (!entry.isIntersecting) {
+      return;
+    }
+    console.log('Showing reviews')
+    fillReviewsHTML(reviews);
+    observer.unobserve(entry.target);
+  }
+
+  const observer = new IntersectionObserver(showReviews);
+  observer.observe(reviewsContainer);
+}
+
+// --------------------------
+// Spinner
+// --------------------------
+
+const spinner = document.querySelector('.spinner');
+const restaurantAndReviewsContainer = document.querySelector('#restaurant-and-reviews');
+const restaurantContainer = document.querySelector('#restaurant-container');
+const reviewsContainer = document.querySelector('#reviews-container');
+
+const showSpinner = () => {
+  spinner.style.display = 'block';
+  restaurantContainer.style.display = 'none';
+  reviewsContainer.style.display = 'none';
+  restaurantAndReviewsContainer.classList.add('vertically-centered-content');
+}
+
+const hideSpinner = () => {
+  spinner.style.display = 'none';
+  restaurantContainer.style.display = 'block';
+  reviewsContainer.style.display = 'block';
+  restaurantAndReviewsContainer.classList.remove('vertically-centered-content');
 }
 
 const registerServiceWorker = () => {
@@ -61,29 +140,20 @@ const registerServiceWorker = () => {
   }
 }
 
-/**
- * Get current restaurant from page URL.
- */
-const fetchRestaurantFromURL = () => {
-  if (self.restaurant) { // restaurant already fetched!
-    return Promise.resolve(self.restaurant);
-  }
 
+const getRestaurantIdFromUrl = () => {
   const id = getParameterByName('id');
-  if (!id) { // no id found in URL
-    return Promise.reject('No restaurant id in URL');
+  if (!id) {
+    throw new Error('No id found in the URL');
   }
-  return DBHelper.fetchRestaurantById(id).then((restaurant) => {
-    self.restaurant = restaurant;
-    fillRestaurantHTML();
-    return restaurant;
-  });
+  return id;
 }
+
 
 /**
  * Create restaurant HTML and add it to the webpage
  */
-const fillRestaurantHTML = (restaurant = self.restaurant) => {
+const fillRestaurantHTML = (restaurant) => {
   const name = document.getElementById('restaurant-name');
   name.innerHTML = restaurant.name;
 
@@ -110,16 +180,14 @@ const fillRestaurantHTML = (restaurant = self.restaurant) => {
 
   // fill operating hours
   if (restaurant.operating_hours) {
-    fillRestaurantHoursHTML();
+    fillRestaurantHoursHTML(restaurant.operating_hours);
   }
-  // fill reviews
-  fillReviewsHTML();
 }
 
 /**
  * Create restaurant operating hours HTML table and add it to the webpage.
  */
-const fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hours) => {
+const fillRestaurantHoursHTML = (operatingHours) => {
   const hours = document.getElementById('restaurant-hours');
   const tbody = hours.querySelector('tbody');
   for (let key in operatingHours) {
@@ -144,20 +212,19 @@ const fillRestaurantHoursHTML = (operatingHours = self.restaurant.operating_hour
 /**
  * Create all reviews HTML and add them to the webpage.
  */
-const fillReviewsHTML = (reviews = self.restaurant.reviews) => {
-  const container = document.getElementById('reviews-container');
+const fillReviewsHTML = (reviews) => {
+  const reviewsContainer = document.getElementById('reviews-list');
+  reviewsContainer.innerHTML = ''
 
   if (!reviews) {
     const noReviews = document.createElement('p');
     noReviews.innerHTML = 'No reviews yet!';
-    container.appendChild(noReviews);
+    reviewsContainer.appendChild(noReviews);
     return;
   }
-  const ul = document.getElementById('reviews-list');
   reviews.forEach(review => {
-    ul.appendChild(createReviewHTML(review));
+    reviewsContainer.appendChild(createReviewHTML(review));
   });
-  container.appendChild(ul);
 }
 
 /**
@@ -174,7 +241,7 @@ const createReviewHTML = (review) => {
 
   const date = document.createElement('span');
   date.classList.add('date');
-  date.innerHTML = review.date;
+  date.innerHTML = new Date(review.createdAt).toDateString();
   li.appendChild(date);
 
   const rating = document.createElement('p');
@@ -195,7 +262,7 @@ const createReviewHTML = (review) => {
 /**
  * Add restaurant name to the breadcrumb navigation menu
  */
-const fillBreadcrumb = (restaurant=self.restaurant) => {
+const fillBreadcrumb = (restaurant) => {
   const breadcrumb = document.getElementById('breadcrumb');
   const li = document.createElement('li');
   li.innerHTML = restaurant.name;
@@ -238,10 +305,10 @@ const onStarMouseClick = (event) => {
 }
 
 const saveRating = (id) => {
-  pickedId = id;
-  picker.setAttribute('rating', id + 1);
-  picker.setAttribute('aria-valuenow', id + 1);
-  picker.setAttribute('aria-valuetext', `${id + 1} out of 5`); 
+  pickedId = parseInt(id);
+  picker.setAttribute('rating', pickedId + 1);
+  picker.setAttribute('aria-valuenow', pickedId + 1);
+  picker.setAttribute('aria-valuetext', `${pickedId + 1} out of 5`); 
 }
 
 const onPickerMouseOut = () => {
@@ -312,38 +379,117 @@ const reviewField = document.querySelector('#review-comment-field');
 
 const submitButton = document.querySelector('#submit-review');
 
-const onSubmit = () => {
-  const name = nameField.value;
-  const comments = reviewField.value;
-  const rating = picker.getAttribute('rating');
 
-  const review = {
-    restaurant_id: getParameterByName('id'),
-    name: name,
-    rating: rating,
-    commments: comments,
-  }
 
-  saveReviewLocally(review);  
-  displayLocallyCreatedReview(review);
-}
-
-const offlineChangesStore = localforage.createInstance({
-  name: 'offlineChangesStore',
-})
-
-const saveReviewLocally = (review) => {
-  offlineChangesStore.length().then(lastIndex => {
-    const key = `${lastIndex}-review`;
-    return localforage.setItem(key, review);
-  })
+const saveReviewLocally = async (review) => {
+  review.createdAt = Date.now();
+  await DBHelper.saveRequestLocally(review.restaurant_id, 'review', review);
+  return review;
 }
 
 const displayLocallyCreatedReview = (review) => {
-  review.data = new Date()
   const reviewElement = createReviewHTML(review);
-  self.restaurant.reviews = [review, ...self.restaurant.reviews];
-  fillReviewsHTML();
+  fillReviewsHTML([review, ...self.restaurant.reviews]);
 }
 
-submitButton.addEventListener('click', onSubmit);
+const setUpReviewForm = (reviews) => {
+  const onSubmit = async () => {
+    const restaurantId = getParameterByName('id');
+    const name = nameField.value;
+    const comments = reviewField.value;
+    const rating = picker.getAttribute('rating');
+  
+    const review = {
+      restaurant_id: restaurantId,
+      name: name,
+      rating: rating,
+      comments: comments,
+    }
+  
+    const savedReview = await saveReviewLocally(review);
+    reviews = [savedReview, ...reviews];
+    fillReviewsHTML(reviews);
+    DBHelper.tryUploadingLocalRequests();
+  }
+
+  submitButton.addEventListener('click', onSubmit);
+}
+
+// -------------------------
+// Fav Button
+// -------------------------
+
+const favButton = document.querySelector('#add-restaurant-to-favorites');
+
+const parseBoolean = x => x === 'true' || x === true;
+
+const setUpFavoriteButton = (restaurant, localFav) => {
+  let isFavorite;
+  if (!localFav || !localFav.fav) {
+    isFavorite = parseBoolean(restaurant.is_favorite);
+  } else {
+    isFavorite = parseBoolean(localFav);
+  }
+  
+  updateFavButton(isFavorite);
+
+  const onFavButtonClick = () => {
+    isFavorite = !isFavorite;
+    updateFavButton(isFavorite);
+    if (isFavorite) {
+      saveFav(restaurant, true);
+    } else {
+      saveFav(restaurant, false);
+    }
+    DBHelper.tryUploadingLocalRequests();
+  }
+
+  favButton.addEventListener('click', onFavButtonClick);
+}
+
+
+
+const updateFavButton = (isToggled) => {
+  if (isToggled) {
+    favButton.classList.add('toggled-fav-button');
+    return;
+  }
+  favButton.classList.remove('toggled-fav-button');
+}
+
+const saveFav = (restaurant, status) => {
+  return DBHelper.saveRequestLocally(restaurant.id, 'fav', {
+    restaurant_id: restaurant.id,
+    fav: status,
+  }, favFilter);
+}
+
+/**
+ * Returns false if the request is fav
+ * @param {Object} request 
+ */
+const favFilter = (request) => request.type !== 'fav';
+
+/**
+ * Sets up the map
+ */
+
+const showMapButton = document.querySelector('#show-map-button');
+
+const prepareMap = (restaurant) => {
+  console.log('Map is ready to be shown');
+  showMapButton.addEventListener('click', () => {
+    showMapButton.style.display = 'none';
+    showMap(restaurant);
+  })
+}
+
+const showMap = (restaurant) => {
+  console.log('showing the map')
+  const map = new google.maps.Map(document.getElementById('map'), {
+    zoom: 16,
+    center: restaurant.latlng,
+    scrollwheel: false
+  });
+  DBHelper.mapMarkerForRestaurant(restaurant, map);
+}

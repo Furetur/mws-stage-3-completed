@@ -11,7 +11,11 @@ var markers = []
  * Fetch neighborhoods and cuisines while the page is loading
  */
 
-
+const mapLoaded = new Promise(resolve => {
+  window.initMap = () => {
+    resolve();
+  }
+})
 
 document.addEventListener('DOMContentLoaded', async (event) => {
   console.info('%c Loading...', 'color: orange;');
@@ -21,66 +25,79 @@ document.addEventListener('DOMContentLoaded', async (event) => {
   let restaurants;
 
   try {
-    restaurants = await DBHelper.fetchRestaurants();
+    restaurants = await DBHelper.getRestaurants();
   } catch(e) {
     if (e instanceof EmptyStorageError) {
       // the storage is empty
-      restaurants = await DBHelper.fetchNewData();
-      await DBHelper.putData(restaurants);
+      restaurants = await DBHelper.fetchRestaurants();
+      await DBHelper.putRestaurants(restaurants);
 
     } else {
       console.error(e);
     }
   }
 
+
   setDropdowns(restaurants);
+
+
+  try {
+    await updateRestaurants(restaurants);
+  } catch(e) {
+    console.error(e); 
+  }
+
+  mapLoaded.then(() => {
+    // when map has loaded
+    prepareMap(restaurants)
+  });
 
   hideSpinner();
 
   registerServiceWorker();
 
-  try {
-    await updateRestaurants();
-  } catch(e) {
-    console.error('Shit fuck', e);
-  }
-
   console.info('%c Loaded!', 'color: green;');
+
+  await DBHelper.updateInBackground();
+
 });
 
-
-window.addEventListener('load', async () => {
-  console.info('%c Idling...', 'color: purple;');
-  const startTime = Date.now();
-
-  // await DBHelper.updateData();
-  // await fetchAll();
-
-  const endTime = Date.now();
-
-  console.log(`%c Idled for ${endTime - startTime}ms`, 'color: purple;')
-});
-
-
-const fetchAll = () => {
-  return Promise.all(
-    [fetchNeighborhoods(), fetchCuisines()]
-  )
-}
 
 const setDropdowns = (restaurants) => {
   setNeighborhoods(restaurants);
   setCuisines(restaurants);
 }
 
+const cSelect = document.getElementById('cuisines-select');
+
 const setCuisines = (restaurants) => {
   const cuisines = getCuisinesFromRestaurants(restaurants);
   fillCuisinesHTML(cuisines);
+  cSelect.addEventListener('change', () => {
+    updateRestaurants(restaurants)
+  })
 }
+
+const nSelect = document.getElementById('neighborhoods-select');
 
 const setNeighborhoods = (restaurants) => {
   const neighborhoods = getNeighborhoodsFromRestaurants(restaurants);
   fillNeighborhoodsHTML(neighborhoods);
+  nSelect.addEventListener('change', () => {
+    updateRestaurants(restaurants)
+  })
+}
+
+
+const getSelectedNeighborhood = () => {
+  const nIndex = nSelect.selectedIndex;
+  return nSelect[nIndex].value;
+}
+
+
+const getSelectedCuisine = () => {
+  const cIndex = cSelect.selectedIndex;
+  return cSelect[cIndex].value;
 }
 
 const getCuisinesFromRestaurants = (restaurants) => {
@@ -96,12 +113,16 @@ const getNeighborhoodsFromRestaurants = (restaurants) => {
 }
 
 
-const updateContent = () => {
-  fetchNeighborhoods();
-  fetchCuisines();
-  return updateRestaurants();
-};
-
+const filterRestaurantsByCuisineAndNeighborhood = (restaurants, cuisine, neighborhood) => {
+  if (cuisine != 'all') { // filter by cuisine
+    return restaurants.filter(r => r.cuisine_type == cuisine);
+  }
+  if (neighborhood != 'all') { // filter by neighborhood
+    return restaurants.filter(r => r.neighborhood == neighborhood);
+  }
+  
+  return restaurants;
+}
 
 const registerServiceWorker = () => {
   if('serviceWorker' in navigator) {
@@ -188,17 +209,6 @@ const getCardsToPreload = () => getCards().slice(0, LOAD_FIRST_CARDS);
 
 
 /**
- * Fetch all neighborhoods and set their HTML.
- */
-const fetchNeighborhoods = () => {
-  return DBHelper.fetchNeighborhoods().then(neighborhoods => {
-    self.neighborhoods = neighborhoods;
-    fillNeighborhoodsHTML();
-    return neighborhoods;
-  });
-}
-
-/**
  * Set neighborhoods HTML.
  */
 const fillNeighborhoodsHTML = (neighborhoods = self.neighborhoods) => {
@@ -239,7 +249,19 @@ const fillCuisinesHTML = (cuisines = self.cuisines) => {
 /**
  * Initialize Google map, called from HTML.
  */
-window.initMap = () => {
+
+const showMapButton = document.querySelector('#show-map-button');
+
+const prepareMap = (restaurants) => {
+  console.log('Map is ready to be shown');
+  showMapButton.addEventListener('click', () => {
+    showMapButton.style.display = 'none';
+    showMap(restaurants);
+  })
+}
+
+const showMap = (restaurants) => {
+  console.log('showing the map')
   let loc = {
     lat: 40.722216,
     lng: -73.987501
@@ -249,27 +271,28 @@ window.initMap = () => {
     center: loc,
     scrollwheel: false
   });
-  
+  addMarkersToMap(restaurants)
+}
+
+
+const getRestaurantsToShow = (restaurants) => {
+  const neighborhood = getSelectedNeighborhood();
+  const cuisine = getSelectedCuisine();
+  return filterRestaurantsByCuisineAndNeighborhood(restaurants, cuisine, neighborhood)
 }
 
 /**
  * Update page and map for current restaurants.
  */
-const updateRestaurants = () => {
-  const cSelect = document.getElementById('cuisines-select');
-  const nSelect = document.getElementById('neighborhoods-select');
-
-  const cIndex = cSelect.selectedIndex;
-  const nIndex = nSelect.selectedIndex;
-
-  const cuisine = cSelect[cIndex].value;
-  const neighborhood = nSelect[nIndex].value;
-
-  return DBHelper.fetchRestaurantByCuisineAndNeighborhood(cuisine, neighborhood).then(restaurants => {
-    resetRestaurants(restaurants);
-    fillRestaurantsHTML(restaurants);
-    implementLazyLoading(getCardsToPreload());
-  });
+const updateRestaurants = (restaurants) => {
+  const restaurantsToShow = getRestaurantsToShow(restaurants);
+  // reset the list and remove markers
+  resetRestaurants(restaurantsToShow);
+  // add cards to list
+  fillRestaurantsHTML(restaurantsToShow);
+  // add markers to map
+  addMarkersToMap(restaurantsToShow);
+  implementLazyLoading(getCardsToPreload());
 }
 
 /**
@@ -295,7 +318,6 @@ const fillRestaurantsHTML = (restaurants = self.restaurants) => {
   restaurants.forEach(restaurant => {
     ul.append(createRestaurantHTML(restaurant));
   });
-  addMarkersToMap();
 }
 
 /**
@@ -380,7 +402,7 @@ const createResponsiveImageFor = (imageName) => {
 /**
  * Add markers for current restaurants to the map.
  */
-const addMarkersToMap = (restaurants = self.restaurants) => {
+const addMarkersToMap = (restaurants) => {
   restaurants.forEach(restaurant => {
     // Add marker to the map
     const marker = DBHelper.mapMarkerForRestaurant(restaurant, self.map);

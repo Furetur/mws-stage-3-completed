@@ -31,23 +31,24 @@
     <section id="map-container">
       <!-- implemented a skip link-->
       <a href="#main-section" id="skip-link">Skip the map</a>
+      <button id="show-map-button">Show the map</button>
       <div id="map" role="application"></div>
     </section>
     <section id="main-section">
       <div class="filter-options">
         <h2>Filter Results</h2>
-        <select id="neighborhoods-select" name="neighborhoods" aria-label="Select neighborhoods" onchange="updateRestaurants()">
+        <select id="neighborhoods-select" name="neighborhoods" aria-label="Select neighborhoods">
           <option value="all">All Neighborhoods</option>
         </select>
-        <select id="cuisines-select" name="cuisines" aria-label="Select cuisines" onchange="updateRestaurants()">
+        <select id="cuisines-select" name="cuisines" aria-label="Select cuisines">
           <option value="all">All Cuisines</option>
         </select>
       </div>
+      <div class="spinner">
+        <div class="double-bounce1"></div>
+        <div class="double-bounce2"></div>
+      </div>
       <ul id="restaurants-list">
-        <div class="spinner">
-          <div class="double-bounce1"></div>
-          <div class="double-bounce2"></div>
-        </div>
       </ul>
       <footer id="second-footer">
         Copyright (c) 2017 <a href="/"><strong>Restaurant Reviews</strong></a> All Rights Reserved.
@@ -55,6 +56,7 @@
     </section>
   </main>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.26.0/polyfill.min.js"></script>
   <script type="application/javascript" charset="utf-8" src="js/main.js"></script>
   <script async defer src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCFdj2xOwjvjOtw89CHUI5TCRxLAMag6uQ&libraries=places&callback=initMap"></script>
 

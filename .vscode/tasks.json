@@ -6,7 +6,8 @@
         {
             "label": "Start Sails",
             "type": "shell",
-            "command": "node ../mws-restaurant-stage-3/server"
+            "command": "node ../mws-restaurant-stage-3/server",
+            "problemMatcher": []
         },
         {
             "label": "Serve",
