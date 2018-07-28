@@ -6,6 +6,8 @@ let restaurants,
 var map
 var markers = []
 
+let mapIsShown = false;
+
 
 /**
  * Fetch neighborhoods and cuisines while the page is loading
@@ -46,13 +48,14 @@ document.addEventListener('DOMContentLoaded', async (event) => {
   } catch(e) {
     console.error(e); 
   }
+  
+  hideSpinner();
 
   mapLoaded.then(() => {
     // when map has loaded
     prepareMap(restaurants)
   });
 
-  hideSpinner();
 
   registerServiceWorker();
 
@@ -254,14 +257,20 @@ const showMapButton = document.querySelector('#show-map-button');
 
 const prepareMap = (restaurants) => {
   console.log('Map is ready to be shown');
+  showMapButton.textContent = 'Show the map';
   showMapButton.addEventListener('click', () => {
-    showMapButton.style.display = 'none';
-    showMap(restaurants);
+    try {
+      showMap(getRestaurantsToShow(restaurants));
+      showMapButton.style.display = 'none';
+    } catch(e) {
+      showMapButton.textContent = 'Error showing the map';
+    }
   })
 }
 
 const showMap = (restaurants) => {
-  console.log('showing the map')
+  console.log('showing the map');
+  mapIsShown = true;
   let loc = {
     lat: 40.722216,
     lng: -73.987501
@@ -291,7 +300,9 @@ const updateRestaurants = (restaurants) => {
   // add cards to list
   fillRestaurantsHTML(restaurantsToShow);
   // add markers to map
-  addMarkersToMap(restaurantsToShow);
+  if (mapIsShown) {
+    addMarkersToMap(restaurantsToShow);
+  }
   implementLazyLoading(getCardsToPreload());
 }
 

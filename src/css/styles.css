@@ -489,10 +489,15 @@ nav h1 a:focus {
   background: #fff;
 	border-radius: 5px;
 	padding: 10px;
-	z-index: 2;
+  z-index: 2;
+  border: 0;
 	box-shadow: 0 14px 28px rgba(0,0,0,0.25), 0 10px 10px rgba(0,0,0,0.22);
 	text-transform: uppercase;
 	color: #1976d2;
+}
+
+#show-map-text {
+  
 }
 
 

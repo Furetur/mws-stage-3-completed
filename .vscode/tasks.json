@@ -13,6 +13,11 @@
             "label": "Serve",
             "type": "shell",
             "command": "npm run serve"
+        },
+        {
+            "type": "gulp",
+            "task": "build",
+            "problemMatcher": []
         }
     ]
 }

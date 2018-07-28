@@ -4,7 +4,7 @@
 <head>
   <title>Restaurant Info</title>
   <link rel="preload" href="css/styles.css" as="style">
-  <link rel="preload" href="js/main.js" as="script">
+  <link rel="preload" href="js/restaurant_info.js" as="script">
   <link rel="preload" href="https://fonts.googleapis.com/css?family=Raleway|Roboto" as="style">
 
   <link rel="stylesheet" href="css/styles.css" type="text/css">
@@ -99,6 +99,7 @@
     <section id="map-container">
       <!-- and another skip link -->
       <a href="#reviews-container" id="skip-link">Skip the map</a>
+      <button id="show-map-button">Map is loading</button>
       <div id="map" role="application"></div>
     </section>
     <!-- End map -->
@@ -112,7 +113,6 @@
   <!-- End footer -->
 
   <!-- Beginning scripts -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/babel-polyfill/6.26.0/polyfill.min.js"></script>
   <!-- Main javascript file -->
   <script type="text/javascript" src="js/restaurant.js"></script>
   <!-- Google Maps -->

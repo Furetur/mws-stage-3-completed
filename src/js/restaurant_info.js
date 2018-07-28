@@ -129,7 +129,7 @@ const showSpinner = () => {
 
 const hideSpinner = () => {
   spinner.style.display = 'none';
-  restaurantContainer.style.display = 'block';
+  restaurantContainer.style.display = 'flex';
   reviewsContainer.style.display = 'block';
   restaurantAndReviewsContainer.classList.remove('vertically-centered-content');
 }
@@ -433,7 +433,7 @@ const setUpFavoriteButton = (restaurant, localFav) => {
   
   updateFavButton(isFavorite);
 
-  const onFavButtonClick = () => {
+  const onFavButtonClick = async () => {
     isFavorite = !isFavorite;
     updateFavButton(isFavorite);
     if (isFavorite) {
@@ -441,7 +441,9 @@ const setUpFavoriteButton = (restaurant, localFav) => {
     } else {
       saveFav(restaurant, false);
     }
-    DBHelper.tryUploadingLocalRequests();
+    await DBHelper.tryUploadingLocalRequests();
+    // update db in background
+      await DBHelper.updateInBackground();
   }
 
   favButton.addEventListener('click', onFavButtonClick);
@@ -478,9 +480,14 @@ const showMapButton = document.querySelector('#show-map-button');
 
 const prepareMap = (restaurant) => {
   console.log('Map is ready to be shown');
+  showMapButton.textContent = 'Show the map';
   showMapButton.addEventListener('click', () => {
-    showMapButton.style.display = 'none';
-    showMap(restaurant);
+    try {
+      showMap(restaurant);
+      showMapButton.style.display = 'none';
+    } catch(e) {
+      showMapButton.textContent = 'Error showing the map';
+    }
   })
 }
 
